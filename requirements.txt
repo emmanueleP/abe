@@ -1,0 +1,6 @@
+PyQt5
+qt-material
+Pillow
+PyPDF2
+python-docx
+openpyxl 
