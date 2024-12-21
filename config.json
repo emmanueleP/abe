@@ -1,9 +1,0 @@
-{
-    "theme": "dark",
-    "year": "2024",
-    "last_protocol_number": 3,
-    "protocol_format": "PROT-{year}-{number:05d}",
-    "output_directory": "documenti_protocollati",
-    "stamp_image": null,
-    "stamp_position": "bottom-right"
-}

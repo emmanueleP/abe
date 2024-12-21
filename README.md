@@ -1,19 +1,36 @@
-# Abe
+# Abe-Gestionale
 
-Abe è un'applicazione desktop per la protocollazione automatica di documenti. Sviluppato da Emmanuele Pani per la sede Avis di Decimoputzu.
+Abe-Gestionale è una suite di applicazioni desktop sviluppata da Emmanuele Pani.
 
-## Caratteristiche
+## Applicazioni
 
-- Interfaccia grafica moderna con supporto per tema chiaro/scuro
-- Protocollazione automatica con numerazione progressiva
-- Supporto per multiple formati di file:
-  - PDF (.pdf)
-  - Microsoft Word (.docx)
-  - Microsoft Excel (.xlsx)
-  - Immagini (.png, .jpg, .jpeg)
-- Possibilità di aggiungere un timbro personalizzato
-- Configurazione flessibile dell'anno di protocollazione
+### Ordina
+- Protocollazione automatica di documenti con numerazione progressiva
+- Supporto per multipli formati di file (PDF, DOCX, XLSX, immagini)
+- Aggiunta automatica di timbro e numerazione
+- Cronologia dei documenti protocollati
+- Gestione per anno di protocollazione
+
+### AViS66
+- Gestione del registro soci e volontari
+- Importazione ed esportazione dati da/verso Excel
+- Gestione tabellare con 23 colonne personalizzabili
+- Selezione multipla e modifica in blocco
+- Protezione dei dati di intestazione
+
+### PDFtoA
+- Conversione di documenti PDF in formato PDF/A
+- Supporto per la conversione multipla
+- Monitoraggio del progresso di conversione
+- Mantenimento della struttura originale del documento
+
+## Caratteristiche Comuni
+
+- Interfaccia grafica moderna e intuitiva
+- Supporto per tema chiaro/scuro
+- Configurazione flessibile
 - Salvataggio automatico delle impostazioni
+- Gestione errori avanzata
 
 ## Requisiti di Sistema
 
@@ -25,12 +42,16 @@ Abe è un'applicazione desktop per la protocollazione automatica di documenti. S
   - PyPDF2
   - python-docx
   - openpyxl
+  - pandas
+  - xlsxwriter
+  - PyMuPDF
 
 ## Installazione
 
 1. Clona il repository:
 ```bash
 git clone https://github.com/emmanueleP/abe.git
+cd abe
 ```
 
 2. Installa le dipendenze:
@@ -42,12 +63,19 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+## Utilizzo
 
-## Applicazione
-Esegui il file Abe.exe per avviare l'applicazione. 
+1. Avvia l'applicazione con `python main.py`
+2. Seleziona l'applicazione desiderata dalla schermata principale:
+   - **Ordina** per la protocollazione documenti
+   - **AViS66** per la gestione soci
+   - **PDFtoA** per la conversione PDF
+3. Ogni applicazione ha il proprio menu di aiuto e configurazione
 
 ## Licenza
-Abe è rilasciato sotto la licenza MIT. Vedi il file LICENSE per ulteriori dettagli.
+
+Abe-Gestionale è rilasciato sotto la licenza MIT. Vedi il file LICENSE per ulteriori dettagli.
 
 ## Contatti
+
 Per qualsiasi domanda o problema, contattare Emmanuele Pani su GitHub.

@@ -71,7 +71,7 @@ class AvisGUI(QMainWindow):
         # Stile tabella
         self.table_view.setAlternatingRowColors(True)
         self.table_view.setSelectionBehavior(QTableView.SelectRows)
-        self.table_view.setSelectionMode(QTableView.SingleSelection)
+        self.table_view.setSelectionMode(QTableView.ExtendedSelection)
         self.table_view.verticalHeader().setDefaultSectionSize(30)
         
         # Imposta altezza minima intestazioni
@@ -179,22 +179,45 @@ class AvisGUI(QMainWindow):
         self.table_view.edit(index)  # Inizia modifica della prima cella
 
     def remove_row(self):
-        current_row = self.table_view.currentIndex().row()
-        if current_row >= 0:
-            reply = QMessageBox.question(
+        """Rimuove le righe selezionate"""
+        selected_rows = self.table_view.selectionModel().selectedRows()
+        if not selected_rows:
+            return
+        
+        # Se è selezionata solo la prima riga (intestazione), non permettere l'eliminazione
+        if len(selected_rows) == 1 and selected_rows[0].row() == 0:
+            return
+        
+        # Rimuovi la prima riga dalla selezione se presente
+        selected_rows = [row for row in selected_rows if row.row() > 0]
+        if not selected_rows:
+            return
+
+        # Messaggio di conferma appropriato per singola o multiple righe
+        if len(selected_rows) == 1:
+            message = 'Sei sicuro di voler eliminare questa riga?'
+        else:
+            message = f'Sei sicuro di voler eliminare {len(selected_rows)} righe?'
+
+        reply = QMessageBox.question(
+            self,
+            'Conferma eliminazione',
+            message,
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            # Ordina gli indici in ordine decrescente per non alterare gli indici durante l'eliminazione
+            rows = sorted([index.row() for index in selected_rows], reverse=True)
+            for row in rows:
+                self.table_model.removeRows(row, 1)
+            
+            QMessageBox.information(
                 self,
-                'Conferma eliminazione',
-                'Sei sicuro di voler eliminare questa riga?',
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                "Completato",
+                "Righe eliminate con successo" if len(rows) > 1 else "Riga eliminata con successo"
             )
-            if reply == QMessageBox.Yes:
-                self.table_model.removeRows(current_row, 1)
-                QMessageBox.information(
-                    self,
-                    "Completato",
-                    "Riga eliminata con successo"
-                )
 
     def show_settings(self):
         from .settings import SettingsDialog
