@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal
 import fitz  # PyMuPDF
 import os
+from .converter import PDFConverter  # Aggiungi questo import
+from .settings import pdftoa_settings  # Aggiungi questo import
 
 class PDFtoAGUI(QMainWindow):
     closed = pyqtSignal()
@@ -40,6 +42,12 @@ class PDFtoAGUI(QMainWindow):
         exit_action.setShortcut('Ctrl+Q')
         file_menu.addAction(exit_action)
         
+        # Menu Impostazioni
+        settings_menu = menubar.addMenu('Impostazioni')
+        settings_action = QAction('Configura...', self)
+        settings_action.triggered.connect(self.show_settings)
+        settings_menu.addAction(settings_action)
+        
         # Menu Help
         help_menu = menubar.addMenu('Help')
         about_action = QAction('Informazioni...', self)
@@ -56,6 +64,7 @@ class PDFtoAGUI(QMainWindow):
         files_layout = QVBoxLayout()
         
         self.files_list = QListWidget()
+        self.files_list.itemSelectionChanged.connect(self.update_buttons)
         files_layout.addWidget(self.files_list)
         
         # Pulsanti per la gestione dei file
@@ -116,40 +125,64 @@ class PDFtoAGUI(QMainWindow):
         selected_items = self.files_list.selectedItems()
         if not selected_items:
             return
+
+        # Usa la directory predefinita dalle impostazioni
+        initial_dir = pdftoa_settings.current_settings["output_directory"]
+        
+        converted_files = []
+        failed_files = []
         
         self.progress_bar.setVisible(True)
         self.progress_bar.setMaximum(len(selected_items))
         self.progress_bar.setValue(0)
+        
+        converter = PDFConverter()
         
         for i, item in enumerate(selected_items):
             idx = self.files_list.row(item)
             input_path = self.pdf_files[idx]
             
             try:
-                # Crea il nome del file di output
-                output_path = os.path.splitext(input_path)[0] + "_PDFA.pdf"
+                # Chiedi dove salvare il file
+                filename = os.path.basename(input_path)
+                base_name = os.path.splitext(filename)[0]
+                suggested_name = f"{base_name}_PDFA.pdf"
                 
-                # Converti in PDF/A
-                doc = fitz.open(input_path)
-                doc.convert_to_pdf_a()  # Converte in PDF/A
-                doc.save(output_path)
-                doc.close()
-                
-                self.progress_bar.setValue(i + 1)
-                
-            except Exception as e:
-                QMessageBox.critical(
+                output_path, _ = QFileDialog.getSaveFileName(
                     self,
-                    "Errore",
-                    f"Errore durante la conversione di {os.path.basename(input_path)}: {str(e)}"
+                    "Salva PDF/A",
+                    os.path.join(initial_dir, suggested_name),
+                    "PDF Files (*.pdf)"
                 )
+                
+                if output_path:
+                    # Converti il file
+                    converter.convert_to_pdfa(input_path, output_path)
+                    converted_files.append(filename)
+                    
+                    # Aggiorna la directory iniziale per il prossimo file
+                    initial_dir = os.path.dirname(output_path)
+                    
+            except Exception as e:
+                failed_files.append((filename, str(e)))
+                
+            self.progress_bar.setValue(i + 1)
         
         self.progress_bar.setVisible(False)
-        QMessageBox.information(
-            self,
-            "Completato",
-            "Conversione completata con successo!"
-        )
+        
+        # Mostra il risultato
+        if converted_files:
+            success_msg = f"File convertiti con successo:\n- " + "\n- ".join(converted_files)
+            if failed_files:
+                success_msg += "\n\nFile non convertiti:\n- " + "\n- ".join(
+                    f"{name}: {error}" for name, error in failed_files
+                )
+            QMessageBox.information(self, "Completato", success_msg)
+        elif failed_files:
+            error_msg = "Errori durante la conversione:\n- " + "\n- ".join(
+                f"{name}: {error}" for name, error in failed_files
+            )
+            QMessageBox.critical(self, "Errore", error_msg)
 
     def update_buttons(self):
         """Aggiorna lo stato dei pulsanti"""
@@ -173,3 +206,8 @@ class PDFtoAGUI(QMainWindow):
     def closeEvent(self, event):
         self.closed.emit()
         event.accept() 
+
+    def show_settings(self):
+        from .settings import SettingsDialog
+        dialog = SettingsDialog(self)
+        dialog.exec_() 
