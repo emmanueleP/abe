@@ -19,6 +19,9 @@ class WelcomeDialog(QMainWindow):
         self.setFixedSize(800, 600)
         self.setup_menu()
         self.setup_ui()
+        
+        # Controlla aggiornamenti all'avvio se abilitato
+        self.check_updates_on_startup()
 
     def setup_menu(self):
         menubar = QMenuBar()
@@ -49,6 +52,11 @@ class WelcomeDialog(QMainWindow):
         
         theme_menu.addAction(light_action)
         theme_menu.addAction(dark_action)
+        
+        # Aggiornamenti
+        update_action = QAction('Aggiornamenti...', self)
+        update_action.triggered.connect(self.show_update_settings)
+        settings_menu.addAction(update_action)
         
         # Menu Help
         help_menu = menubar.addMenu('Help')
@@ -95,11 +103,11 @@ class WelcomeDialog(QMainWindow):
             self,
             "Informazioni",
             "Abe-Gestionale v1.0.0\n\n"
-            "Suite di applicazioni per la gestione documentale.\n\n"
+            "Suite di applicazioni per la gestione della segreteria di una sede Avis.\n\n"
             "- Ordina: Protocollazione documenti\n"
             "- aViS66: Gestione Libro Soci Avis\n"
             "- PDFtoA: Conversione PDF in PDF/A\n\n"
-            "© 2024 Emmanuele Pani\n"
+            "© 2025 Emmanuele Pani\n"
             "Under MIT License"
         )
 
@@ -156,7 +164,7 @@ class WelcomeDialog(QMainWindow):
         main_layout.addWidget(buttons_container)
 
         # Copyright
-        copyright = QLabel("© 2024 Emmanuele Pani. Under MIT License.")
+        copyright = QLabel("© 2025 Emmanuele Pani. Under MIT License.")
         copyright.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(copyright)
 
@@ -230,5 +238,30 @@ class WelcomeDialog(QMainWindow):
             self.show()
 
     def closeEvent(self, event):
+        if hasattr(self, 'update_checker'):
+            self.update_checker.stop()
         self.closed.emit()
         event.accept()
+
+    def show_update_settings(self):
+        from .updater import UpdateSettings
+        dialog = UpdateSettings(self)
+        dialog.exec_()
+
+    def check_updates_on_startup(self):
+        try:
+            with open('data/config/config.json', 'r') as f:
+                config = json.load(f)
+                if config.get('updates', {}).get('auto_check', True):
+                    from .updater import UpdateChecker
+                    self.update_checker = UpdateChecker("1.0.0")  # Mantieni il riferimento
+                    self.update_checker.update_available.connect(self.show_update_available)
+                    self.update_checker.error_occurred.connect(lambda e: print(f"Errore aggiornamenti: {e}"))
+                    self.update_checker.start()
+        except Exception as e:
+            print(f"Errore nel controllo aggiornamenti: {e}")
+
+    def show_update_available(self, version, release_notes):
+        from .updater import UpdateDialog
+        dialog = UpdateDialog(self, version, release_notes)
+        dialog.exec_()

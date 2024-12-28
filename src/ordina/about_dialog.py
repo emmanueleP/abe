@@ -45,7 +45,7 @@ class AboutDialog(QDialog):
         layout.addWidget(formats)
 
         # Copyright
-        copyright = QLabel("© 2024 - Emmanuele Pani. Under MIT License.")
+        copyright = QLabel("© 2025 - Emmanuele Pani. Under MIT License.")
         copyright.setAlignment(Qt.AlignCenter)
         layout.addWidget(copyright)
 
