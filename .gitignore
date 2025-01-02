@@ -23,3 +23,8 @@ data/database/*
 # Environment
 .env
 .env.local
+
+# Installer
+*.spec
+file_version_info.txt
+*.iss
