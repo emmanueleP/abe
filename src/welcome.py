@@ -7,6 +7,8 @@ from PyQt5.QtGui import QFont
 from src.ordina.gui import ProtocolGUI
 from src.avis66.gui import AvisGUI
 from src.pdftoa.gui import PDFtoAGUI
+from src.manrev.gui import ManRevGUI
+from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
 import json
 
 class WelcomeDialog(QMainWindow):
@@ -16,7 +18,7 @@ class WelcomeDialog(QMainWindow):
         super().__init__()
         self.app = app
         self.setWindowTitle("Abe-Gestionale")
-        self.setFixedSize(800, 600)
+        self.setFixedSize(1200, 800)
         self.setup_menu()
         self.setup_ui()
         
@@ -106,7 +108,8 @@ class WelcomeDialog(QMainWindow):
             "Suite di applicazioni per la gestione della segreteria di una sede Avis.\n\n"
             "- Ordina: Protocollazione documenti\n"
             "- aViS66: Gestione Libro Soci Avis\n"
-            "- PDFtoA: Conversione PDF in PDF/A\n\n"
+            "- PDFtoA: Conversione PDF in PDF/A\n"
+            "- ManRev: Gestione Mandati e Reversali Avis\n\n"
             "© 2025 Emmanuele Pani\n"
             "Under MIT License"
         )
@@ -160,6 +163,14 @@ class WelcomeDialog(QMainWindow):
             self.launch_pdftoa
         )
         buttons_layout.addWidget(pdftoa_button)
+
+        # Pulsante ManRev
+        manrev_button = self.create_app_button(
+            "ManRev",
+            "Gestione Mandati e Reversali Avis",
+            self.launch_manrev
+        )
+        buttons_layout.addWidget(manrev_button)
 
         main_layout.addWidget(buttons_container)
 
@@ -237,6 +248,21 @@ class WelcomeDialog(QMainWindow):
             )
             self.show()
 
+    def launch_manrev(self):
+        try:
+            self.hide()
+            self.manrev_window = ManRevGUI(self.app)
+            self.manrev_window.show()
+            self.manrev_window.closed.connect(self.show)
+        except Exception as e:
+            print(f"Errore: {e}")  # Per debug
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore nell'avvio di ManRev: {str(e)}"
+            )
+            self.show()
+
     def closeEvent(self, event):
         if hasattr(self, 'update_checker'):
             self.update_checker.stop()
@@ -244,7 +270,6 @@ class WelcomeDialog(QMainWindow):
         event.accept()
 
     def show_update_settings(self):
-        from .updater import UpdateSettings
         dialog = UpdateSettings(self)
         dialog.exec_()
 
@@ -253,7 +278,6 @@ class WelcomeDialog(QMainWindow):
             with open('data/config/config.json', 'r') as f:
                 config = json.load(f)
                 if config.get('updates', {}).get('auto_check', True):
-                    from .updater import UpdateChecker
                     self.update_checker = UpdateChecker("1.0.0")  # Mantieni il riferimento
                     self.update_checker.update_available.connect(self.show_update_available)
                     self.update_checker.error_occurred.connect(lambda e: print(f"Errore aggiornamenti: {e}"))
@@ -262,6 +286,5 @@ class WelcomeDialog(QMainWindow):
             print(f"Errore nel controllo aggiornamenti: {e}")
 
     def show_update_available(self, version, release_notes):
-        from .updater import UpdateDialog
         dialog = UpdateDialog(self, version, release_notes)
         dialog.exec_()

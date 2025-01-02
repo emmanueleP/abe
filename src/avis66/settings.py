@@ -4,7 +4,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton, QLabel, QGroupBox,
     QHBoxLayout, QComboBox, QFileDialog, QTableWidget,
-    QTableWidgetItem, QHeaderView, QMessageBox
+    QTableWidgetItem, QHeaderView, QMessageBox, QLineEdit, QWidget, QVBoxLayout, QTabWidget
 )
 from PyQt5.QtCore import Qt
 
@@ -49,7 +49,10 @@ class AvisSettings:
                 "U": "TIPOSOCIO",
                 "V": "DATACESSAZIONE",
                 "W": "CAUSACESSAZIONE"
-            }
+            },
+            "codice_sede": "0000",
+            "default_year": str(datetime.now().year),
+            "last_directory": ""
         }
         self.current_settings = self.load_settings()
 
@@ -94,8 +97,14 @@ class SettingsDialog(QDialog):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(20)
-
+        
+        # Crea il tab widget
+        tab_widget = QTabWidget()
+        
+        # Tab Generali
+        general_tab = QWidget()
+        general_layout = QVBoxLayout()
+        
         # Tema
         theme_group = QGroupBox("Tema")
         theme_layout = QHBoxLayout()
@@ -106,8 +115,31 @@ class SettingsDialog(QDialog):
         theme_layout.addWidget(theme_label)
         theme_layout.addWidget(self.theme_combo)
         theme_group.setLayout(theme_layout)
-        layout.addWidget(theme_group)
-
+        general_layout.addWidget(theme_group)
+        
+        # Codice Sede e Anno
+        sede_group = QGroupBox("Impostazioni Registro")
+        sede_layout = QVBoxLayout()
+        
+        # Codice Sede
+        sede_row = QHBoxLayout()
+        sede_row.addWidget(QLabel("Codice Sede:"))
+        self.sede_input = QLineEdit()
+        self.sede_input.setText(avis_settings.current_settings["codice_sede"])
+        sede_row.addWidget(self.sede_input)
+        sede_layout.addLayout(sede_row)
+        
+        # Anno Predefinito
+        year_row = QHBoxLayout()
+        year_row.addWidget(QLabel("Anno Predefinito:"))
+        self.year_input = QLineEdit()
+        self.year_input.setText(avis_settings.current_settings["default_year"])
+        year_row.addWidget(self.year_input)
+        sede_layout.addLayout(year_row)
+        
+        sede_group.setLayout(sede_layout)
+        general_layout.addWidget(sede_group)
+        
         # Directory predefinite
         dir_group = QGroupBox("Directory Predefinite")
         dir_layout = QVBoxLayout()
@@ -135,12 +167,16 @@ class SettingsDialog(QDialog):
         dir_layout.addLayout(export_layout)
         
         dir_group.setLayout(dir_layout)
-        layout.addWidget(dir_group)
-
-        # Valori Prima Riga
-        columns_group = QGroupBox("Valori Prima Riga")
+        general_layout.addWidget(dir_group)
+        
+        general_tab.setLayout(general_layout)
+        tab_widget.addTab(general_tab, "Generali")
+        
+        # Tab Colonne
+        columns_tab = QWidget()
         columns_layout = QVBoxLayout()
         
+        # Valori Prima Riga
         info_label = QLabel("Modifica i valori predefiniti che appariranno nella prima riga della tabella:")
         info_label.setWordWrap(True)
         columns_layout.addWidget(info_label)
@@ -155,34 +191,30 @@ class SettingsDialog(QDialog):
         column_names = avis_settings.current_settings["column_names"]
         self.columns_table.setRowCount(len(column_names))
         for i, (col, name) in enumerate(column_names.items()):
-            # Colonna (non modificabile)
             col_item = QTableWidgetItem(f"Colonna {col}")
             col_item.setFlags(col_item.flags() & ~Qt.ItemIsEditable)
             col_item.setBackground(Qt.lightGray)
-            
-            # Valore predefinito (modificabile)
             name_item = QTableWidgetItem(name)
-            name_item.setToolTip(f"Valore predefinito per la colonna {col}")
-            
             self.columns_table.setItem(i, 0, col_item)
             self.columns_table.setItem(i, 1, name_item)
         
         columns_layout.addWidget(self.columns_table)
         
-        # Pulsante per ripristinare i valori originali
+        # Pulsante reset
         reset_btn = QPushButton("Ripristina Valori Originali")
         reset_btn.clicked.connect(self.reset_column_names)
-        reset_btn.setToolTip("Ripristina i valori predefiniti originali per tutte le colonne")
         columns_layout.addWidget(reset_btn)
         
-        columns_group.setLayout(columns_layout)
-        layout.addWidget(columns_group)
-
+        columns_tab.setLayout(columns_layout)
+        tab_widget.addTab(columns_tab, "Colonne")
+        
+        layout.addWidget(tab_widget)
+        
         # Pulsante salva
         save_button = QPushButton("Salva")
         save_button.clicked.connect(self.save_settings)
         layout.addWidget(save_button)
-
+        
         self.setLayout(layout)
 
     def change_import_dir(self):
@@ -214,6 +246,11 @@ class SettingsDialog(QDialog):
             col = chr(65 + row)  # A, B, C, ...
             name = self.columns_table.item(row, 1).text()
             avis_settings.set_column_name(col, name)
+        
+        avis_settings.current_settings.update({
+            "codice_sede": self.sede_input.text(),
+            "default_year": self.year_input.text()
+        })
         
         avis_settings.save_settings()
         self.accept()

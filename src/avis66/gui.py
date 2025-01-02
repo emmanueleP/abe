@@ -9,7 +9,9 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from .models import AvisTableModel
 from .excel_handler import import_from_excel, export_to_excel
 from .settings import avis_settings as settings
+from .startup_dialog import StartupDialog
 import os
+import pandas as pd
 
 class AvisGUI(QMainWindow):
     closed = pyqtSignal()  # Segnale emesso quando la finestra viene chiusa
@@ -17,25 +19,48 @@ class AvisGUI(QMainWindow):
     def __init__(self, app=None):
         super().__init__()
         self.app = app
-        self.setWindowTitle("aViS66 - Registro Soci e Volontari")
         
-        # Imposta la finestra a schermo intero
-        self.showMaximized()
-        
-        self.setup_ui()
-        self.setup_menu()
-        self.setup_toolbar()
-        
-        if self.app:
-            self.apply_theme()
+        # Mostra il dialogo di avvio
+        startup = StartupDialog(self)
+        if startup.exec_() == QDialog.Accepted and startup.file_path:
+            self.file_path = startup.file_path
+            
+            # Imposta il titolo della finestra
+            self.setWindowTitle(f"AViS66 - {os.path.basename(self.file_path)}")
+            
+            # Imposta le dimensioni della finestra
+            self.resize(1400, 800)  # Dimensioni predefinite
+            
+            # Setup dell'interfaccia
+            self.setup_ui()
+            self.setup_menu()
+            self.setup_toolbar()
+            
+            # Carica i dati
+            if os.path.exists(self.file_path):
+                self.load_data()
+            else:
+                self.create_new_file()
+            
+            # Applica il tema
+            if self.app:
+                self.apply_theme()
+        else:
+            # Se l'utente annulla, chiudi l'applicazione
+            self.close()
 
     def setup_toolbar(self):
-        toolbar = QToolBar()
-        toolbar.setIconSize(QSize(24, 24))
-        self.addToolBar(toolbar)
-
+        toolbar = self.addToolBar("Strumenti")
+        
+        # Pulsante Salva
+        save_action = QAction(QIcon(os.path.join('src', 'assets', 'diskette.png')), "Salva", self)
+        save_action.setShortcut("Ctrl+S")
+        save_action.setStatusTip("Salva il registro")
+        save_action.triggered.connect(self.save_file)
+        toolbar.addAction(save_action)
+        
         # Pulsante aggiungi riga con icona
-        add_action = QAction(QIcon(os.path.join('src', 'assets', 'add-post.png')), 'Aggiungi Riga', self)
+        add_action = QAction(QIcon(os.path.join('src', 'assets', 'add.png')), 'Aggiungi Riga', self)
         add_action.setStatusTip('Aggiungi una nuova riga')
         add_action.triggered.connect(self.add_row)
         add_action.setShortcut('Ctrl+N')
@@ -229,3 +254,83 @@ class AvisGUI(QMainWindow):
         from .about_dialog import AboutDialog
         dialog = AboutDialog(self)
         dialog.exec_() 
+
+    def save_file(self):
+        """Salva il file Excel corrente"""
+        try:
+            if not hasattr(self, 'file_path') or not self.file_path:
+                return
+            
+            # Salva i dati dalla tabella al DataFrame
+            data = []
+            model = self.table_view.model()
+            for row in range(model.rowCount()):
+                row_data = {}
+                for col in range(model.columnCount()):
+                    header = model.headerData(col, Qt.Horizontal)
+                    index = model.index(row, col)
+                    value = model.data(index)
+                    row_data[header] = value if value is not None else ""
+                data.append(row_data)
+            
+            # Crea DataFrame e salva
+            df = pd.DataFrame(data)
+            df.to_excel(self.file_path, index=False)
+            
+            self.statusBar().showMessage("File salvato con successo", 3000)
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore durante il salvataggio del file: {str(e)}"
+            ) 
+
+    def table_to_df(self):
+        """Converte i dati della tabella in DataFrame"""
+        data = []
+        for row in range(self.table.rowCount()):
+            row_data = {}
+            for col in range(self.table.columnCount()):
+                header = self.table.horizontalHeaderItem(col).text()
+                item = self.table.item(row, col)
+                value = item.text() if item else ""
+                row_data[header] = value
+            data.append(row_data)
+        self.df = pd.DataFrame(data) 
+
+    def create_new_file(self):
+        """Crea un nuovo file Excel con le intestazioni predefinite"""
+        try:
+            # Crea un DataFrame vuoto con le colonne predefinite
+            columns = settings.current_settings["column_names"].values()
+            self.df = pd.DataFrame(columns=list(columns))
+            
+            # Salva il DataFrame nel nuovo file
+            self.df.to_excel(self.file_path, index=False)
+            
+            # Carica i dati nella tabella
+            self.table_model.load_data(self.df)
+            
+            self.statusBar().showMessage("Nuovo file creato con successo", 3000)
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore nella creazione del nuovo file: {str(e)}"
+            )
+            self.close()
+
+    def load_data(self):
+        """Carica i dati dal file Excel esistente"""
+        try:
+            self.df = pd.read_excel(self.file_path)
+            self.table_model.load_data(self.df)
+            self.statusBar().showMessage("File caricato con successo", 3000)
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore nel caricamento del file: {str(e)}"
+            )
+            self.close() 
