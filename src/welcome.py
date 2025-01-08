@@ -8,6 +8,7 @@ from src.ordina.gui import ProtocolGUI
 from src.avis66.gui import AvisGUI
 from src.pdftoa.gui import PDFtoAGUI
 from src.manrev.gui import ManRevGUI
+from src.cbp.gui import CbpGUI
 from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
 import json
 
@@ -18,7 +19,7 @@ class WelcomeDialog(QMainWindow):
         super().__init__()
         self.app = app
         self.setWindowTitle("Abe-Gestionale")
-        self.setFixedSize(1200, 800)
+        self.setFixedSize(1400, 900)
         self.setup_menu()
         self.setup_ui()
         
@@ -172,6 +173,14 @@ class WelcomeDialog(QMainWindow):
         )
         buttons_layout.addWidget(manrev_button)
 
+        # Pulsante CBP
+        cbp_button = self.create_app_button(
+            "CBP",
+            "Gestione Rendiconto per cassa",
+            self.launch_cbp
+        )
+        buttons_layout.addWidget(cbp_button)
+
         main_layout.addWidget(buttons_container)
 
         # Copyright
@@ -262,6 +271,12 @@ class WelcomeDialog(QMainWindow):
                 f"Errore nell'avvio di ManRev: {str(e)}"
             )
             self.show()
+
+    def launch_cbp(self):
+        self.hide()
+        self.cbp_window = CbpGUI(self.app)
+        self.cbp_window.show()
+        self.cbp_window.closed.connect(self.show)
 
     def closeEvent(self, event):
         if hasattr(self, 'update_checker'):
