@@ -75,14 +75,16 @@ class OrdinaSettings:
         )
 
     def get_output_directory(self):
-        """Restituisce il percorso della cartella di output per l'anno corrente"""
-        year_folder = os.path.join(
-            self.current_settings["output_directory"],
-            self.current_settings["year"]
+        """Restituisce la directory di output per i file protocollati."""
+        year = datetime.now().year
+        default_dir = os.path.join(
+            os.path.expanduser("~"),
+            "Documents",
+            "Abe",
+            "Ordina",
+            str(year)
         )
-        # Assicurati che la cartella esista
-        os.makedirs(year_folder, exist_ok=True)
-        return year_folder
+        return self.current_settings.get("output_directory", default_dir)
 
     def set_output_directory(self, path):
         """Imposta la directory di output"""

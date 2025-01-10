@@ -22,7 +22,8 @@ def handle_file(file_path):
         if not os.path.exists(file_path):
             raise FileNotFoundError("Il file non esiste")
 
-        protocol_number, timestamp = generate_protocol()
+        protocol_number, timestamp_str = generate_protocol()
+        timestamp = datetime.now()  # Usiamo un vero oggetto datetime
         output_path = get_output_path(file_path)
         
         # Assicurati che la directory di output esista
@@ -36,7 +37,7 @@ def handle_file(file_path):
         elif file_path.lower().endswith(".docx"):
             result = add_stamp_to_docx(file_path, protocol_number, timestamp)
         elif file_path.lower().endswith(".xlsx"):
-            result = add_stamp_to_xlsx(file_path, protocol_number, timestamp)
+            result = add_stamp_to_xlsx(file_path, protocol_number, timestamp_str)
         else:
             return "Formato file non supportato."
         
@@ -58,30 +59,28 @@ def add_stamp_to_image(file_path, protocol, timestamp):
             draw = ImageDraw.Draw(img)
             
             try:
-                font = ImageFont.truetype("arial.ttf", 36)
+                font = ImageFont.truetype("arial.ttf", 13)
             except:
                 font = ImageFont.load_default()
             
-            stamp_text = f"{protocol}\n{timestamp}"
+            stamp_text = f"Prot. N° {protocol}/{timestamp.year}"
+            
+            # Calcola dimensioni immagine e testo
+            img_width = img.width
+            text_bbox = draw.textbbox((0, 0), stamp_text, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+            
+            # Posiziona in alto a destra con margine
             margin = 20
-            position = (margin, margin)
+            x = img_width - text_width - margin
+            y = margin
             
-            # Aggiungi sfondo semi-trasparente
-            text_bbox = draw.textbbox(position, stamp_text, font=font)
-            padding = 10
-            draw.rectangle(
-                [
-                    text_bbox[0] - padding,
-                    text_bbox[1] - padding,
-                    text_bbox[2] + padding,
-                    text_bbox[3] + padding
-                ],
-                fill=(255, 255, 255, 128)
-            )
+            # Aggiungi testo nero
+            draw.text((x, y), stamp_text, fill=(0, 0, 0), font=font)
             
-            draw.text(position, stamp_text, fill=(255, 0, 0), font=font)
-            
+            # Salva nella directory corretta
             output_path = get_output_path(file_path)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
             img.save(output_path, quality=95)
             
             return output_path
@@ -93,37 +92,47 @@ def add_stamp_to_pdf(file_path, protocol, timestamp):
     """Aggiunge il timbro di protocollo al PDF."""
     try:
         # Crea un'immagine con il timbro
-        width, height = 600, 200
+        width, height = 200, 50  # Dimensioni ridotte per il timbro
         img = Image.new('RGBA', (width, height), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img)
         
         try:
-            font = ImageFont.truetype("arial.ttf", 24)
+            font = ImageFont.truetype("arial.ttf", 13)
         except:
             font = ImageFont.load_default()
         
         # Aggiungi il testo del protocollo
-        stamp_text = f"{protocol}\n{timestamp}"
-        draw.text((20, 20), stamp_text, fill=(255, 0, 0), font=font)
+        stamp_text = f"Prot. N° {protocol}/{timestamp.year}"
+        text_bbox = draw.textbbox((0, 0), stamp_text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        
+        # Posiziona il testo in alto a destra nell'immagine
+        x = width - text_width - 10
+        y = 5
+        draw.text((x, y), stamp_text, fill=(0, 0, 0), font=font)
         
         # Converti l'immagine in PDF
         pdf_bytes = io.BytesIO()
         img.save(pdf_bytes, format='PDF')
         pdf_bytes.seek(0)
-        stamp_page = PdfReader(pdf_bytes).pages[0]
+        stamp_pdf = PdfReader(pdf_bytes)
         
         # Applica il timbro al PDF
         reader = PdfReader(file_path)
         writer = PdfWriter()
         
         # Aggiungi il timbro solo alla prima pagina
-        for i, page in enumerate(reader.pages):
-            if i == 0:
-                page.merge_page(stamp_page)
+        page = reader.pages[0]
+        page.merge_page(stamp_pdf.pages[0])  # Rimosso l'argomento 'over'
+        writer.add_page(page)
+        
+        # Aggiungi le altre pagine senza timbro
+        for page in reader.pages[1:]:
             writer.add_page(page)
         
         # Salva il PDF
         output_path = get_output_path(file_path)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, "wb") as output_file:
             writer.write(output_file)
             
@@ -135,29 +144,22 @@ def add_stamp_to_pdf(file_path, protocol, timestamp):
 def add_stamp_to_docx(file_path, protocol, timestamp):
     """Aggiunge il timbro di protocollo al documento Word."""
     try:
-        # Carica il documento
         doc = Document(file_path)
+        protocol, timestamp = generate_protocol()
         
-        # Aggiungi una sezione all'inizio del documento
-        section = doc.sections[0]
-        header = section.header
+        # Aggiungi il timbro
+        from .utils import add_timestamp
+        doc = add_timestamp(doc)
         
-        # Aggiungi il testo del protocollo nell'header
-        paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-        run = paragraph.add_run(f"{protocol}\n{timestamp}")
-        font = run.font
-        font.name = 'Arial'
-        font.size = Pt(12)
-        font.color.rgb = RGBColor(255, 0, 0)
-        
-        # Salva il documento
+        # Salva nella directory corretta
         output_path = get_output_path(file_path)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         doc.save(output_path)
         
-        return output_path
+        return output_path, protocol, timestamp
         
     except Exception as e:
-        raise Exception(f"Errore durante la protocollazione del documento Word: {str(e)}")
+        raise Exception(f"Errore durante la protocollazione del documento: {str(e)}")
 
 def add_stamp_to_xlsx(file_path, protocol, timestamp):
     """Aggiunge il timbro di protocollo al foglio Excel."""
