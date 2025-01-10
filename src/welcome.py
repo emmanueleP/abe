@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QPushButton, QLabel,
-    QWidget, QHBoxLayout, QMessageBox, QMenuBar, QMenu, QAction, QActionGroup, QTabWidget, QDialog
+    QWidget, QHBoxLayout, QMessageBox, QMenuBar, QMenu, QAction, QActionGroup, QTabWidget, QDialog, QSpacerItem, QSizePolicy
 )
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, pyqtSignal, QSize
+from PyQt5.QtGui import QFont, QIcon, QPixmap
 from src.ordina.gui import ProtocolGUI
 from src.avis66.gui import AvisGUI
 from src.pdftoa.gui import PDFtoAGUI
@@ -14,6 +14,7 @@ from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
 from .about_abe import AboutDialog
 from .manual_abe import ManualDialog
 import json
+import os
 
 class WelcomeDialog(QMainWindow):
     closed = pyqtSignal()
@@ -22,7 +23,14 @@ class WelcomeDialog(QMainWindow):
         super().__init__()
         self.app = app
         self.setWindowTitle("Abe-Gestionale")
-        self.setFixedSize(1600, 1000)
+        self.showMaximized()
+    
+    # Imposta l'icona dell'applicazione
+        icon_path = os.path.join("src", "assets", "logo_abe.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+            if self.app:
+                self.app.setWindowIcon(QIcon(icon_path))
         self.setup_menu()
         self.setup_ui()
         
@@ -120,8 +128,18 @@ class WelcomeDialog(QMainWindow):
         title.setFont(QFont('Arial', 24, QFont.Bold))
         main_layout.addWidget(title)
 
+        # Logo
+        logo_label = QLabel()
+        logo_path = os.path.join("src", "assets", "logo_abe.png")
+        if os.path.exists(logo_path):
+            logo_pixmap = QPixmap(logo_path)
+            scaled_pixmap = logo_pixmap.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            logo_label.setPixmap(scaled_pixmap)
+            logo_label.setAlignment(Qt.AlignCenter)
+            main_layout.addWidget(logo_label)
+
         # Sottotitolo
-        subtitle = QLabel("Seleziona l'applicazione da avviare")
+        subtitle = QLabel("Seleziona l'applicazione da avviare. Puoi tornare qui da qualsiasi app cliccando su Ctrl+Q")
         subtitle.setAlignment(Qt.AlignCenter)
         subtitle.setFont(QFont('Arial', 12))
         main_layout.addWidget(subtitle)
@@ -189,6 +207,7 @@ class WelcomeDialog(QMainWindow):
     def create_app_button(self, title, description, callback):
         button = QPushButton()
         button.setMinimumSize(250, 200)
+        
         button.setStyleSheet("""
             QPushButton {
                 border: 2px solid #2196F3;
@@ -204,18 +223,29 @@ class WelcomeDialog(QMainWindow):
         # Layout interno del pulsante
         button_layout = QVBoxLayout()
         
+        # Titolo sopra
         title_label = QLabel(title)
         title_label.setFont(QFont('Arial', 16, QFont.Bold))
         title_label.setAlignment(Qt.AlignCenter)
+        button_layout.addWidget(title_label)
         
+        # Logo al centro
+        logo_label = QLabel()
+        logo_path = os.path.join("src", "assets", f"logo_{title.lower()}.png")
+        if os.path.exists(logo_path):
+            pixmap = QPixmap(logo_path)
+            scaled_pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            logo_label.setPixmap(scaled_pixmap)
+            logo_label.setAlignment(Qt.AlignCenter)
+        button_layout.addWidget(logo_label)
+        
+        # Descrizione sotto
         desc_label = QLabel(description)
         desc_label.setAlignment(Qt.AlignCenter)
         desc_label.setWordWrap(True)
-        
-        button_layout.addWidget(title_label)
         button_layout.addWidget(desc_label)
-        button.setLayout(button_layout)
         
+        button.setLayout(button_layout)
         button.clicked.connect(callback)
         return button
 

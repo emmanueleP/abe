@@ -22,10 +22,10 @@ class ManRevSettings:
             "default_president": "",
             "default_accountant": "",
             "sede_image": "",
-            "firme": {
-                "tesoriere_firma": "",
-                "presidente_firma": "",
-                "addetto_firma": ""
+    "firme": {
+        "tesoriere_firma": "",
+        "presidente_firma": "",
+        "addetto_firma": ""
             }
         }
         self.current_settings = self.load_settings()
