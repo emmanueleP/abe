@@ -1,11 +1,13 @@
 import json
 import os
+import shutil
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton, QLabel, QGroupBox,
     QHBoxLayout, QLineEdit, QFileDialog, QMessageBox,
     QTabWidget, QListWidget, QListWidgetItem, QWidget
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 
 class ManRevSettings:
     def __init__(self):
@@ -19,7 +21,7 @@ class ManRevSettings:
             "default_treasurer": "",
             "default_president": "",
             "default_accountant": "",
-            "header_image": "",
+            "sede_image": "",
             "firme": {
                 "tesoriere_firma": "",
                 "presidente_firma": "",
@@ -101,14 +103,18 @@ class SettingsDialog(QDialog):
         defaults_group.setLayout(defaults_layout)
         general_layout.addWidget(defaults_group)
         
-        # Firme
-        signatures_group = QGroupBox("Firme")
+        
+        general_tab.setLayout(general_layout)
+        tab_widget.addTab(general_tab, "Generali")
+        
+        #Tab firme
+        signatures_tab = QWidget()
         signatures_layout = QVBoxLayout()
         
-        # Firma Tesoriere
+        #Firma Tesoriere
         self.treasurer_sign = self.create_signature_row("Firma Tesoriere", "tesoriere_firma")
         signatures_layout.addLayout(self.treasurer_sign)
-        
+
         # Firma Presidente
         self.president_sign = self.create_signature_row("Firma Presidente", "presidente_firma")
         signatures_layout.addLayout(self.president_sign)
@@ -117,11 +123,8 @@ class SettingsDialog(QDialog):
         self.accountant_sign = self.create_signature_row("Firma Addetto", "addetto_firma")
         signatures_layout.addLayout(self.accountant_sign)
         
-        signatures_group.setLayout(signatures_layout)
-        general_layout.addWidget(signatures_group)
-        
-        general_tab.setLayout(general_layout)
-        tab_widget.addTab(general_tab, "Generali")
+        signatures_tab.setLayout(signatures_layout)
+        tab_widget.addTab(signatures_tab, "Firme")
         
         # Tab Capitoli
         capitoli_tab = QWidget()
@@ -157,6 +160,38 @@ class SettingsDialog(QDialog):
         capitoli_tab.setLayout(capitoli_layout)
         tab_widget.addTab(capitoli_tab, "Capitoli")
         
+        # Tab Immagini
+        images_tab = QWidget()
+        images_layout = QVBoxLayout()
+        
+        # Gruppo Sede
+        sede_group = QGroupBox("Immagine Sede")
+        sede_layout = QVBoxLayout()
+        
+        # Immagine corrente
+        self.sede_preview = QLabel()
+        self.sede_preview.setMinimumSize(200, 100)
+        self.sede_preview.setAlignment(Qt.AlignCenter)
+        self.update_sede_preview()  # Inizializza l'anteprima
+        sede_layout.addWidget(self.sede_preview)
+        
+        # Pulsanti
+        sede_buttons = QHBoxLayout()
+        select_sede_btn = QPushButton("Seleziona Immagine")
+        select_sede_btn.clicked.connect(self.browse_sede_image)
+        sede_buttons.addWidget(select_sede_btn)
+        
+        clear_sede_btn = QPushButton("Rimuovi Immagine")
+        clear_sede_btn.clicked.connect(self.clear_sede_image)
+        sede_buttons.addWidget(clear_sede_btn)
+        
+        sede_layout.addLayout(sede_buttons)
+        sede_group.setLayout(sede_layout)
+        images_layout.addWidget(sede_group)
+        
+        images_tab.setLayout(images_layout)
+        tab_widget.addTab(images_tab, "Immagini")
+        
         layout.addWidget(tab_widget)
         
         # Pulsante salva
@@ -175,21 +210,54 @@ class SettingsDialog(QDialog):
         row.addWidget(path_input)
         
         browse_btn = QPushButton("Sfoglia")
-        browse_btn.clicked.connect(lambda: self.browse_signature(path_input))
+        browse_btn.clicked.connect(lambda: self.browse_signature(path_input, key))
         row.addWidget(browse_btn)
         
         setattr(self, f"{key}_input", path_input)
         return row
 
-    def browse_signature(self, input_widget):
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Seleziona Firma",
-            "",
-            "Immagini (*.png *.jpg *.jpeg)"
-        )
-        if file_path:
-            input_widget.setText(file_path)
+    def browse_signature(self, path_input, signature_type):
+        """Gestisce la selezione e il salvataggio della firma"""
+        try:
+            # Seleziona il file
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Seleziona Firma",
+                "",
+                "Immagini (*.png *.jpg *.jpeg)"
+            )
+            
+            if file_path:
+                # Crea la directory delle firme se non esiste
+                docs_path = os.path.join(os.path.expanduser("~"), "Documents")
+                signatures_dir = os.path.join(docs_path, "Abe", "ManRev", "firme")
+                os.makedirs(signatures_dir, exist_ok=True)
+                
+                # Crea il nome del file di destinazione
+                file_ext = os.path.splitext(file_path)[1]
+                dest_filename = f"{signature_type}{file_ext}"
+                dest_path = os.path.join(signatures_dir, dest_filename)
+                
+                # Copia il file nella directory delle firme
+                shutil.copy2(file_path, dest_path)
+                
+                # Aggiorna il percorso nel campo di input e nelle impostazioni
+                path_input.setText(dest_path)
+                manrev_settings.current_settings["firme"][f"{signature_type}_firma"] = dest_path
+                manrev_settings.save_settings()
+                
+                QMessageBox.information(
+                    self,
+                    "Successo",
+                    f"Firma salvata correttamente in: {dest_path}"
+                )
+                
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore nel salvare la firma: {str(e)}"
+            )
 
     def add_capitolo(self):
         """Aggiunge un nuovo capitolo alla lista"""
@@ -217,9 +285,9 @@ class SettingsDialog(QDialog):
             # Salva i capitoli
             capitoli = [self.capitoli_list.item(i).text() 
                        for i in range(self.capitoli_list.count())]
-            manrev_settings.current_settings["capitoli"] = capitoli
             
             manrev_settings.current_settings.update({
+                "capitoli": capitoli,
                 "default_place": self.place_input.text(),
                 "default_treasurer": self.treasurer_input.text(),
                 "default_president": self.president_input.text(),
@@ -229,6 +297,7 @@ class SettingsDialog(QDialog):
                     "presidente_firma": self.presidente_firma_input.text(),
                     "addetto_firma": self.addetto_firma_input.text()
                 }
+                # sede_image viene gestito separatamente in browse_sede_image
             })
             
             manrev_settings.save_settings()
@@ -240,6 +309,68 @@ class SettingsDialog(QDialog):
                 "Errore",
                 f"Errore nel salvare le impostazioni: {str(e)}"
             )
+
+    def browse_sede_image(self):
+        """Gestisce la selezione dell'immagine della sede"""
+        try:
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Seleziona Immagine Sede",
+                "",
+                "Immagini (*.png *.jpg *.jpeg)"
+            )
+            
+            if file_path:
+                # Crea la directory delle immagini se non esiste
+                docs_path = os.path.join(os.path.expanduser("~"), "Documents")
+                images_dir = os.path.join(docs_path, "Abe", "ManRev", "immagini")
+                os.makedirs(images_dir, exist_ok=True)
+                
+                # Copia l'immagine
+                dest_path = os.path.join(images_dir, "sede" + os.path.splitext(file_path)[1])
+                shutil.copy2(file_path, dest_path)
+                
+                # Aggiorna le impostazioni
+                manrev_settings.current_settings["sede_image"] = dest_path
+                manrev_settings.save_settings()
+                
+                # Aggiorna l'anteprima
+                self.update_sede_preview()
+                
+                QMessageBox.information(
+                    self,
+                    "Successo",
+                    "Immagine della sede salvata correttamente"
+                )
+                
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore nel salvare l'immagine: {str(e)}"
+            )
+
+    def clear_sede_image(self):
+        """Rimuove l'immagine della sede"""
+        try:
+            if "sede_image" in manrev_settings.current_settings:
+                if os.path.exists(manrev_settings.current_settings["sede_image"]):
+                    os.remove(manrev_settings.current_settings["sede_image"])
+                manrev_settings.current_settings.pop("sede_image")
+                manrev_settings.save_settings()
+                self.update_sede_preview()
+        except Exception as e:
+            QMessageBox.critical(self, "Errore", f"Errore nel rimuovere l'immagine: {str(e)}")
+
+    def update_sede_preview(self):
+        """Aggiorna l'anteprima dell'immagine della sede"""
+        if "sede_image" in manrev_settings.current_settings:
+            path = manrev_settings.current_settings["sede_image"]
+            if os.path.exists(path):
+                pixmap = QPixmap(path)
+                self.sede_preview.setPixmap(pixmap.scaled(200, 100, Qt.KeepAspectRatio))
+                return
+        self.sede_preview.setText("Nessuna immagine")
 
 # Istanza singleton delle impostazioni
 manrev_settings = ManRevSettings() 

@@ -164,49 +164,9 @@ class ManRevGUI(QMainWindow):
         layout.addWidget(self.generate_button)
 
     def generate_document(self):
-        try:
-            data = {
-                "Tipo": self.doc_type.currentText(),
-                "Numero": self.number_input.text(),
-                "Capitolo": self.chapter_input.currentText(),
-                "Importo in €": self.amount_input.text(),
-                "Descrizione del pagamento": self.description_input.toPlainText(),
-                "Data": self.date_input.date().toString("dd/MM/yyyy"),
-                "Luogo": self.place_input.text(),
-                "Il Tesoriere": self.treasurer_input.text(),
-                "Il Presidente": self.president_input.text(),
-                "L'Addetto Contabile": self.accountant_input.text()
-            }
-            
-            # Validazione
-            if not all([data["Numero"], data["Capitolo"], data["Importo in €"], 
-                       data["Descrizione del pagamento"]]):
-                raise ValueError("Tutti i campi obbligatori devono essere compilati")
-            
-            # Genera il nome del file
-            default_name = f"{data['Tipo']}_{data['Numero']}_{data['Data'].replace('/', '-')}"
-            
-            file_path, _ = QFileDialog.getSaveFileName(
-                self,
-                "Salva Documento",
-                default_name,
-                "Documenti Word (*.docx)"
-            )
-            
-            if file_path:
-                generate_documents(data, file_path, print_after=self.print_check.isChecked())
-                QMessageBox.information(
-                    self,
-                    "Successo",
-                    "Documento generato con successo!"
-                )
-                
-        except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Errore",
-                f"Errore nella generazione del documento: {str(e)}"
-            )
+        """Avvia la generazione del documento"""
+        from .generator import generate_document
+        generate_document(self)
 
     def show_settings(self):
         from .settings import SettingsDialog

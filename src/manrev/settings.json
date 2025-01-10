@@ -1,19 +1,50 @@
 {
-    "theme": "light",
-    "logo_path": "assets/logo.png",
-    "header_image_path": "assets/header.png",
-    "header_text": "AVIS - Avis Comunale Decimoputzu OdV",
-    "documento_tipo": "mandato",
-    "capitoli": [],
-    "default_values": {
-        "Luogo": "Decimoputzu",
-        "Il Tesoriere": "",
-        "Il Presidente": "",
-        "L'Addetto Contabile": ""
-    },
+    "output_directory": "",
+    "last_directory": "",
     "firme": {
         "tesoriere_firma": "",
         "presidente_firma": "",
         "addetto_firma": ""
+    },
+    "default_values": {
+        "luogo": "Decimoputzu",
+        "tesoriere": "Il Tesoriere",
+        "presidente": "Il Presidente",
+        "addetto": "L'Addetto"
+    },
+    "numerazione": {
+        "mandati": {
+            "ultimo_numero": 0,
+            "anno_corrente": "2024",
+            "formato": "MAN-{year}-{number:04d}"
+        },
+        "reversali": {
+            "ultimo_numero": 0,
+            "anno_corrente": "2024",
+            "formato": "REV-{year}-{number:04d}"
+        }
+    },
+    "intestazione": {
+        "nome_associazione": "Avis Comunale Decimoputzu OdV",
+        "indirizzo": "",
+        "codice_fiscale": "",
+        "telefono": "",
+        "email": "decimoputzu.comunale@avis.it"
+    },
+    "stampa": {
+        "stampa_automatica": false,
+        "stampante_predefinita": "",
+        "copie": 1
+    },
+    "layout": {
+        "margini": {
+            "superiore": 2.0,
+            "inferiore": 2.0,
+            "sinistro": 2.0,
+            "destro": 2.0
+        },
+        "dimensioni_firma": 4.0,
+        "dimensioni_logo": 2.0,
+        "larghezza_colonna": 6.0
     }
 } 
