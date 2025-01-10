@@ -9,6 +9,7 @@ from src.avis66.gui import AvisGUI
 from src.pdftoa.gui import PDFtoAGUI
 from src.manrev.gui import ManRevGUI
 from src.cbp.gui import CbpGUI
+from src.agenda.gui import AgendaGUI
 from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
 import json
 
@@ -19,7 +20,7 @@ class WelcomeDialog(QMainWindow):
         super().__init__()
         self.app = app
         self.setWindowTitle("Abe-Gestionale")
-        self.setFixedSize(1400, 900)
+        self.setFixedSize(1600, 1000)
         self.setup_menu()
         self.setup_ui()
         
@@ -108,6 +109,7 @@ class WelcomeDialog(QMainWindow):
             "- aViS66: Gestione Libro Soci Avis\n"
             "- PDFtoA: Conversione PDF in PDF/A\n"
             "- ManRev: Gestione Mandati e Reversali Avis\n\n"
+            "- CBP: Gestione Rendiconto per cassa\n\n"
             "© 2025 Emmanuele Pani\n"
             "Under MIT License"
         )
@@ -177,6 +179,14 @@ class WelcomeDialog(QMainWindow):
             self.launch_cbp
         )
         buttons_layout.addWidget(cbp_button)
+
+        # Pulsante Agenda
+        agenda_button = self.create_app_button(
+            "Agenda",
+            "Gestione calendario e appuntamenti",
+            self.launch_agenda
+        )
+        buttons_layout.addWidget(agenda_button)
 
         main_layout.addWidget(buttons_container)
 
@@ -274,6 +284,14 @@ class WelcomeDialog(QMainWindow):
         self.cbp_window = CbpGUI(self.app)
         self.cbp_window.show()
         self.cbp_window.closed.connect(self.show)
+
+    def launch_agenda(self):
+        """Avvia l'applicazione Agenda"""
+        from .agenda import AgendaGUI
+        self.hide()
+        self.current_app = AgendaGUI(self.app)
+        self.current_app.closed.connect(self.show)
+        self.current_app.show()
 
     def closeEvent(self, event):
         if hasattr(self, 'update_checker'):

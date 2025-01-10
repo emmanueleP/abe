@@ -11,3 +11,4 @@ pikepdf>=8.0.0
 requests>=2.31.0
 pywin32>=306 
 pyinstaller>=5.11.0
+win10toast>=0.9.0
