@@ -1,81 +1,53 @@
-# Abe-Gestionale
+# 🏢 Abe-Gestionale
 
-Abe-Gestionale è una suite di applicazioni desktop sviluppata da Emmanuele Pani.
+Dovendo gestire la segreteria di una sede Avis, ho sviluppato questa suite di applicazioni per la gestione delle varie necessità.
 
-## Applicazioni
+## 📚 Applicazioni
 
-### Ordina
-- Protocollazione automatica di documenti con numerazione progressiva
-- Supporto per multipli formati di file (PDF, DOCX, XLSX, immagini)
-- Aggiunta automatica di timbro e numerazione
-- Cronologia dei documenti protocollati
-- Gestione per anno di protocollazione
+### 📝 Ordina
+- Protocollazione automatica di documenti
+- Supporto per PDF, Word, Excel e immagini
+- Timbro digitale personalizzato
+- Archivio cronologico per anno
+- Directory: Documents/Abe/Ordina/anno
 
-### AViS66
-- Gestione del registro soci e volontari
-- Importazione ed esportazione dati da/verso Excel
-- Gestione tabellare con 23 colonne personalizzabili
-- Selezione multipla e modifica in blocco
-- Protezione dei dati di intestazione
+### 👥 aViS66
+- Gestione completa Libro Soci Avis
+- Anagrafica donatori compatibile con il SIAN 
 
-### PDFtoA
-- Conversione di documenti PDF in formato PDF/A
-- Supporto per la conversione multipla
-- Monitoraggio del progresso di conversione
-- Mantenimento della struttura originale del documento
+### 📄 PDFtoA
+- Conversione di PDF in formato PDF/A
+- Validazione conformità
+- Supporto batch processing
 
-## Caratteristiche Comuni
+### 💰 ManRev
+- Gestione Mandati e Reversali
+- Numerazione automatica
+- Stampa documenti
+- Firme digitali
 
-- Interfaccia grafica moderna e intuitiva
-- Supporto per tema chiaro/scuro
-- Configurazione flessibile
-- Salvataggio automatico delle impostazioni
-- Gestione errori avanzata
+### 📊 CBP
+Ancora in sviluppo
 
-## Requisiti di Sistema
+### 📅 Agenda
+- Gestione eventi e promemoria
+- Notifiche personalizzate
+- Calendario interattivo
+- Categorie personalizzabili
 
-- Python 3.8 o superiore
-- Dipendenze Python (installabili via pip):
-  - PyQt5
-  - qt-material
-  - Pillow
-  - PyPDF2
-  - python-docx
-  - openpyxl
-  - pandas
-  - xlsxwriter
-  - PyMuPDF
+## 🛠️ Requisiti
+- Windows 10/11
+- Spazio su disco: 100MB
+- RAM: 2GB
 
-## Installazione
+## ⚙️ Installazione
+Dalla pagina release scarica il file Abe_setup.exe e installalo.
 
-1. Clona il repository:
-```bash
-git clone https://github.com/emmanueleP/abe.git
-cd abe
-```
+##  📥 Download
+Scarica la versione più recente da https://www.github.com/emmanueleP/abe/releases/
 
-2. Installa le dipendenze:
-```bash
-pip install -r requirements.txt
-```
+## 📋 Licenza
+MIT License - Copyright (c) 2025 Emmanuele Pani
 
-3. Esegui l'applicazione:
-```bash
-python main.py
-```
-## Utilizzo
-
-1. Avvia l'applicazione con `python main.py`
-2. Seleziona l'applicazione desiderata dalla schermata principale:
-   - **Ordina** per la protocollazione documenti
-   - **AViS66** per la gestione soci
-   - **PDFtoA** per la conversione PDF
-3. Ogni applicazione ha il proprio menu di aiuto e configurazione
-
-## Licenza
-
-Abe-Gestionale è rilasciato sotto la licenza MIT. Vedi il file LICENSE per ulteriori dettagli.
-
-## Contatti
-
-Per qualsiasi domanda o problema, contattare Emmanuele Pani su GitHub.
+# Issue and bugs
+If you find any issue or bug, please report it through the issue page on GitHub.

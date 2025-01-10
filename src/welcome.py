@@ -11,6 +11,8 @@ from src.manrev.gui import ManRevGUI
 from src.cbp.gui import CbpGUI
 from src.agenda.gui import AgendaGUI
 from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
+from .about_abe import AboutDialog
+from .manual_abe import ManualDialog
 import json
 
 class WelcomeDialog(QMainWindow):
@@ -95,24 +97,13 @@ class WelcomeDialog(QMainWindow):
 
     def show_manual(self):
         """Mostra il manuale dell'applicazione"""
-        manual_dialog = ManualDialog(self)
-        manual_dialog.exec_()
+        dialog = ManualDialog(self)
+        dialog.exec_()
 
     def show_about(self):
         """Mostra informazioni sull'applicazione"""
-        QMessageBox.about(
-            self,
-            "Informazioni",
-            "Abe-Gestionale v1.0.0\n\n"
-            "Suite di applicazioni per la gestione della segreteria di una sede Avis.\n\n"
-            "- Ordina: Protocollazione documenti\n"
-            "- aViS66: Gestione Libro Soci Avis\n"
-            "- PDFtoA: Conversione PDF in PDF/A\n"
-            "- ManRev: Gestione Mandati e Reversali Avis\n\n"
-            "- CBP: Gestione Rendiconto per cassa\n\n"
-            "© 2025 Emmanuele Pani\n"
-            "Under MIT License"
-        )
+        dialog = AboutDialog(self)
+        dialog.exec_()
 
     def setup_ui(self):
         # Widget centrale
@@ -318,169 +309,3 @@ class WelcomeDialog(QMainWindow):
     def show_update_available(self, version, release_notes):
         dialog = UpdateDialog(self, version, release_notes)
         dialog.exec_()
-
-class ManualDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Manuale Abe-Gestionale")
-        self.setMinimumWidth(800)
-        self.setMinimumHeight(600)
-        self.setup_ui()
-    
-    def setup_ui(self):
-        layout = QVBoxLayout()
-        
-        # Titolo
-        title = QLabel("Manuale Utente")
-        title.setStyleSheet("font-size: 18pt; font-weight: bold;")
-        title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
-        
-        # Tab widget per le diverse applicazioni
-        tab_widget = QTabWidget()
-        
-        # Tab Ordina
-        ordina_tab = QWidget()
-        ordina_layout = QVBoxLayout()
-        ordina_text = QLabel(
-            "<h2>Ordina - Protocollazione Documenti</h2>"
-            "<p><b>Funzionalità principali:</b></p>"
-            "<ul>"
-            "<li>Protocollazione automatica di documenti con numerazione progressiva</li>"
-            "<li>Supporto per multipli formati: PDF, DOCX, XLSX, immagini</li>"
-            "<li>Aggiunta automatica di timbro e numerazione</li>"
-            "<li>Cronologia dei documenti protocollati</li>"
-            "<li>Gestione per anno di protocollazione</li>"
-            "</ul>"
-            "<p><b>Come usare:</b></p>"
-            "<ol>"
-            "<li>Clicca su 'Carica Documento' per selezionare il file</li>"
-            "<li>Il numero di protocollo viene assegnato automaticamente</li>"
-            "<li>Clicca su 'Protocolla' per completare l'operazione</li>"
-            "<li>Usa 'Cronologia Anno' per visualizzare i documenti protocollati</li>"
-            "</ol>"
-        )
-        ordina_text.setWordWrap(True)
-        ordina_layout.addWidget(ordina_text)
-        ordina_tab.setLayout(ordina_layout)
-        tab_widget.addTab(ordina_tab, "Ordina")
-        
-        # Tab AViS66
-        avis_tab = QWidget()
-        avis_layout = QVBoxLayout()
-        avis_text = QLabel(
-            "<h2>AViS66 - Gestione Registro Soci</h2>"
-            "<p><b>Funzionalità principali:</b></p>"
-            "<ul>"
-            "<li>Gestione completa del registro soci e volontari</li>"
-            "<li>Importazione ed esportazione dati da/verso Excel</li>"
-            "<li>Gestione tabellare con 23 colonne personalizzabili</li>"
-            "<li>Selezione multipla e modifica in blocco</li>"
-            "<li>Protezione dei dati di intestazione</li>"
-            "</ul>"
-            "<p><b>Come usare:</b></p>"
-            "<ol>"
-            "<li>Crea un nuovo registro o apri uno esistente</li>"
-            "<li>Usa i pulsanti di importazione/esportazione per gestire i dati</li>"
-            "<li>Modifica direttamente le celle della tabella</li>"
-            "<li>Usa il menu contestuale per operazioni aggiuntive</li>"
-            "</ol>"
-        )
-        avis_text.setWordWrap(True)
-        avis_layout.addWidget(avis_text)
-        avis_tab.setLayout(avis_layout)
-        tab_widget.addTab(avis_tab, "AViS66")
-        
-        # Tab PDFtoA
-        pdftoa_tab = QWidget()
-        pdftoa_layout = QVBoxLayout()
-        pdftoa_text = QLabel(
-            "<h2>PDFtoA - Conversione PDF/A</h2>"
-            "<p><b>Funzionalità principali:</b></p>"
-            "<ul>"
-            "<li>Conversione di documenti PDF in formato PDF/A</li>"
-            "<li>Supporto per la conversione multipla</li>"
-            "<li>Monitoraggio del progresso di conversione</li>"
-            "<li>Mantenimento della struttura originale del documento</li>"
-            "</ul>"
-            "<p><b>Come usare:</b></p>"
-            "<ol>"
-            "<li>Seleziona uno o più file PDF da convertire</li>"
-            "<li>Scegli la cartella di destinazione</li>"
-            "<li>Avvia la conversione e monitora il progresso</li>"
-            "</ol>"
-        )
-        pdftoa_text.setWordWrap(True)
-        pdftoa_layout.addWidget(pdftoa_text)
-        pdftoa_tab.setLayout(pdftoa_layout)
-        tab_widget.addTab(pdftoa_tab, "PDFtoA")
-        
-        # Tab ManRev
-        manrev_tab = QWidget()
-        manrev_layout = QVBoxLayout()
-        manrev_text = QLabel(
-            "<h2>ManRev - Mandati e Reversali</h2>"
-            "<p><b>Funzionalità principali:</b></p>"
-            "<ul>"
-            "<li>Generazione automatica di mandati di pagamento</li>"
-            "<li>Generazione automatica di reversali di incasso</li>"
-            "<li>Gestione firme digitali</li>"
-            "<li>Numerazione automatica progressiva</li>"
-            "<li>Stampa automatica dei documenti</li>"
-            "</ul>"
-            "<p><b>Come usare:</b></p>"
-            "<ol>"
-            "<li>Seleziona il tipo di documento (mandato o reversale)</li>"
-            "<li>Compila i campi richiesti</li>"
-            "<li>Aggiungi le firme necessarie</li>"
-            "<li>Genera e stampa il documento</li>"
-            "</ol>"
-        )
-        manrev_text.setWordWrap(True)
-        manrev_layout.addWidget(manrev_text)
-        manrev_tab.setLayout(manrev_layout)
-        tab_widget.addTab(manrev_tab, "ManRev")
-        
-        # Tab CBP
-        cbp_tab = QWidget()
-        cbp_layout = QVBoxLayout()
-        cbp_text = QLabel(
-            "<h2>CBP - Cassa Banca Prepagata</h2>"
-            "<p><b>Funzionalità principali:</b></p>"
-            "<ul>"
-            "<li>Gestione entrate e uscite in due tabelle separate</li>"
-            "<li>Calcolo automatico di totali e saldo</li>"
-            "<li>Supporto per formule stile Excel (SUM, AVG, MIN, MAX)</li>"
-            "<li>Filtri e ricerca avanzata</li>"
-            "<li>Salvataggio automatico in formato Excel</li>"
-            "</ul>"
-            "<p><b>Come usare:</b></p>"
-            "<ol>"
-            "<li>Inserisci le voci di entrata e uscita nelle rispettive tabelle</li>"
-            "<li>Usa formule per calcoli automatici (es. =SUM(B2:B10))</li>"
-            "<li>Utilizza i filtri per analizzare specifiche categorie</li>"
-            "<li>Monitora il saldo aggiornato in tempo reale</li>"
-            "</ol>"
-            "<p><b>Formule disponibili:</b></p>"
-            "<ul>"
-            "<li>SUM(range): somma i valori</li>"
-            "<li>AVG(range): calcola la media</li>"
-            "<li>MIN(range): trova il valore minimo</li>"
-            "<li>MAX(range): trova il valore massimo</li>"
-            "<li>COUNT(range): conta i valori</li>"
-            "<li>ROUND(numero): arrotonda il numero</li>"
-            "</ul>"
-        )
-        cbp_text.setWordWrap(True)
-        cbp_layout.addWidget(cbp_text)
-        cbp_tab.setLayout(cbp_layout)
-        tab_widget.addTab(cbp_tab, "CBP")
-        
-        layout.addWidget(tab_widget)
-        
-        # Pulsante chiudi
-        close_button = QPushButton("Chiudi")
-        close_button.clicked.connect(self.accept)
-        layout.addWidget(close_button)
-        
-        self.setLayout(layout)
