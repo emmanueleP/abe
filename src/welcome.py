@@ -13,6 +13,7 @@ from src.agenda.gui import AgendaGUI
 from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
 from .about_abe import AboutDialog
 from .manual_abe import ManualDialog
+from .utils import get_asset_path
 import json
 import os
 
@@ -130,7 +131,7 @@ class WelcomeDialog(QMainWindow):
 
         # Logo
         logo_label = QLabel()
-        logo_path = os.path.join("src", "assets", "logo_abe.png")
+        logo_path = get_asset_path('logo_abe.png')
         if os.path.exists(logo_path):
             logo_pixmap = QPixmap(logo_path)
             scaled_pixmap = logo_pixmap.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -231,7 +232,7 @@ class WelcomeDialog(QMainWindow):
         
         # Logo al centro
         logo_label = QLabel()
-        logo_path = os.path.join("src", "assets", f"logo_{title.lower()}.png")
+        logo_path = get_asset_path(f'logo_{title.lower()}.png')
         if os.path.exists(logo_path):
             pixmap = QPixmap(logo_path)
             scaled_pixmap = pixmap.scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)

@@ -4,9 +4,11 @@ from PyQt5.QtWidgets import (
     QLineEdit, QTextEdit, QComboBox, QDateEdit, QCheckBox, QDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
+from PyQt5.QtGui import QIcon
 from .settings import manrev_settings
 from .generator import generate_documents
 from .about_dialog import AboutDialog
+from ..utils import get_asset_path
 
 class ManRevGUI(QMainWindow):
     closed = pyqtSignal()
@@ -21,6 +23,8 @@ class ManRevGUI(QMainWindow):
         
         if self.app:
             self.apply_theme()
+        # Imposta l'icona
+        self.setWindowIcon(QIcon(get_asset_path('logo_manrev.png')))
 
     def setup_menu(self):
         menubar = self.menuBar()

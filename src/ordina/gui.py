@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QMessageBox, QMenuBar, QMenu, QAction, QDialog, QComboBox, QHBoxLayout,
     QSpinBox, QGroupBox, QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit
 )
-from PyQt5.QtGui import QPixmap, QDesktopServices
+from PyQt5.QtGui import QPixmap, QDesktopServices, QIcon
 from PyQt5.QtCore import Qt, QUrl, pyqtSignal
 from .file_handler import handle_file
 from .settings import ordina_settings as settings, SettingsDialog
@@ -13,6 +13,7 @@ from io import BytesIO
 from datetime import datetime
 import json
 from .database import ProtocolDatabase
+from ..utils import get_asset_path
 
 class ProtocolGUI(QMainWindow):
     closed = pyqtSignal()
@@ -28,6 +29,8 @@ class ProtocolGUI(QMainWindow):
         self.setup_ui()
         if self.app:
             self.apply_theme()
+        # Imposta l'icona
+        self.setWindowIcon(QIcon(get_asset_path('logo_ordina.png')))
 
     def setup_menu(self):
         menubar = self.menuBar()

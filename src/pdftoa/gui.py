@@ -4,10 +4,12 @@ from PyQt5.QtWidgets import (
     QProgressBar, QGroupBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QIcon
 import fitz  # PyMuPDF
 import os
 from .converter import PDFConverter  # Aggiungi questo import
 from .settings import pdftoa_settings  # Aggiungi questo import
+from ..utils import get_asset_path
 
 class PDFtoAGUI(QMainWindow):
     closed = pyqtSignal()
@@ -23,6 +25,8 @@ class PDFtoAGUI(QMainWindow):
         
         if self.app:
             self.apply_theme()
+        # Imposta l'icona
+        self.setWindowIcon(QIcon(get_asset_path('logo_pdftoa.png')))
 
     def setup_menu(self):
         menubar = self.menuBar()

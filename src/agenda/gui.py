@@ -8,14 +8,16 @@ from datetime import datetime, timedelta
 from win10toast import ToastNotifier
 from .database import AgendaDB
 from .event_dialog import EventDialog
-from PyQt5.QtGui import QTextCharFormat, QColor
+from PyQt5.QtGui import QTextCharFormat, QColor, QIcon
 from .settings import SettingsDialog, agenda_settings
+from ..utils import get_asset_path
 
 class AgendaGUI(QMainWindow):
     closed = pyqtSignal()
     
     def __init__(self, app=None):
         super().__init__()
+        self.setWindowIcon(QIcon(get_asset_path('logo_agenda.png')))
         self.app = app
         self.setWindowTitle("Agenda")
         self.setGeometry(100, 100, 800, 600)

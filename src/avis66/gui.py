@@ -12,6 +12,7 @@ from .settings import avis_settings as settings
 from .startup_dialog import StartupDialog
 import os
 import pandas as pd
+from ..utils import get_asset_path
 
 class AvisGUI(QMainWindow):
     closed = pyqtSignal()  # Segnale emesso quando la finestra viene chiusa
@@ -48,6 +49,9 @@ class AvisGUI(QMainWindow):
         else:
             # Se l'utente annulla, chiudi l'applicazione
             self.close()
+
+        # Imposta l'icona
+        self.setWindowIcon(QIcon(get_asset_path('logo_avis66.png')))
 
     def setup_toolbar(self):
         toolbar = self.addToolBar("Strumenti")

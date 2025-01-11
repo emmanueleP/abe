@@ -15,6 +15,7 @@ from .filter_dialog import FilterDialog
 from .search_dialog import SearchDialog
 import os
 from .logic_manager import LogicManager
+from ..utils import get_asset_path
 
 class CbpGUI(QMainWindow):
     closed = pyqtSignal()
@@ -186,24 +187,20 @@ class CbpGUI(QMainWindow):
         """Imposta la toolbar"""
         toolbar = self.addToolBar("Strumenti")
         
-        # Ottieni il percorso base
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        icons_path = os.path.join(base_path, "src", "cbp", "assets")
-        
         # Nuovo file
-        new_action = QAction(QIcon(os.path.join(icons_path, "add.png")), "Nuovo", self)
+        new_action = QAction(QIcon(get_asset_path('add.png')), "Nuovo", self)
         new_action.setShortcut("Ctrl+N")
         new_action.triggered.connect(self.new_file)
         toolbar.addAction(new_action)
         
         # Apri file
-        open_action = QAction(QIcon(os.path.join(icons_path, "open.png")), "Apri", self)
+        open_action = QAction(QIcon(get_asset_path('open.png')), "Apri", self)
         open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(self.load_data)
         toolbar.addAction(open_action)
         
         # Salva file
-        save_action = QAction(QIcon(os.path.join(icons_path, "diskette.png")), "Salva", self)
+        save_action = QAction(QIcon(get_asset_path('diskette.png')), "Salva", self)
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_file)
         toolbar.addAction(save_action)
@@ -211,25 +208,25 @@ class CbpGUI(QMainWindow):
         toolbar.addSeparator()
         
         # Pulsante Ricerca
-        search_action = QAction(QIcon(os.path.join(icons_path, "search.png")), "Cerca", self)
+        search_action = QAction(QIcon(get_asset_path('search.png')), "Cerca", self)
         search_action.setShortcut("Ctrl+F")
         search_action.triggered.connect(self.show_search)
         toolbar.addAction(search_action)
         
         # Pulsante Filtro
-        filter_action = QAction(QIcon(os.path.join(icons_path, "filter.png")), "Filtri", self)
+        filter_action = QAction(QIcon(get_asset_path('filter.png')), "Filtri", self)
         filter_action.triggered.connect(self.show_filters)
         toolbar.addAction(filter_action)
         
         toolbar.addSeparator()
         
         # Aggiungi riga
-        add_row_action = QAction(QIcon(os.path.join(icons_path, "add.png")), "Aggiungi Riga", self)
+        add_row_action = QAction(QIcon(get_asset_path('add.png')), "Aggiungi Riga", self)
         add_row_action.triggered.connect(lambda: self.insert_row(self.get_current_table()))
         toolbar.addAction(add_row_action)
         
         # Rimuovi riga
-        remove_row_action = QAction(QIcon(os.path.join(icons_path, "trash.png")), "Rimuovi Riga", self)
+        remove_row_action = QAction(QIcon(get_asset_path('trash.png')), "Rimuovi Riga", self)
         remove_row_action.triggered.connect(lambda: self.delete_row(self.get_current_table()))
         toolbar.addAction(remove_row_action)
 
