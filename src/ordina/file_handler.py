@@ -6,30 +6,39 @@ from docx import Document
 import openpyxl
 from .utils import get_output_path, create_stamp
 import io
+from .history_dialog import add_to_history
 
 def handle_file(file_path):
     """Gestisce il file in base al suo tipo"""
-    file_info = QFileInfo(file_path)
-    extension = file_info.suffix().lower()
-    
-    # Ottieni il percorso di output
-    output_path = get_output_path(file_path)
-    
-    # Crea il timbro
-    stamp = create_stamp(os.path.basename(output_path).split("__")[1].split(".")[0])
-    
-    if extension == "pdf":
-        handle_pdf(file_path, output_path, stamp)
-    elif extension == "docx":
-        handle_docx(file_path, output_path, stamp)
-    elif extension == "xlsx":
-        handle_xlsx(file_path, output_path, stamp)
-    elif extension in ["png", "jpg", "jpeg"]:
-        handle_image(file_path, output_path, stamp)
-    else:
-        raise ValueError(f"Formato file non supportato: {extension}")
-    
-    return output_path
+    try:
+        file_info = QFileInfo(file_path)
+        extension = file_info.suffix().lower()
+        
+        # Ottieni il percorso di output
+        output_path = get_output_path(file_path)
+        
+        # Crea il timbro
+        stamp = create_stamp(os.path.basename(output_path).split("__")[1].split(".")[0])
+        
+        if extension == "pdf":
+            handle_pdf(file_path, output_path, stamp)
+        elif extension == "docx":
+            handle_docx(file_path, output_path, stamp)
+        elif extension == "xlsx":
+            handle_xlsx(file_path, output_path, stamp)
+        elif extension in ["png", "jpg", "jpeg"]:
+            handle_image(file_path, output_path, stamp)
+        else:
+            raise ValueError(f"Formato file non supportato: {extension}")
+        
+        # Aggiungi alla cronologia
+        protocol_number = os.path.basename(output_path).split("__")[1].split(".")[0]
+        add_to_history(protocol_number, output_path)
+        
+        return output_path
+        
+    except Exception as e:
+        raise Exception(f"Errore durante la protocollazione: {str(e)}")
 
 def handle_pdf(input_path, output_path, stamp):
     """Gestisce file PDF"""
