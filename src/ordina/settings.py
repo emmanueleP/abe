@@ -36,9 +36,9 @@ class OrdinaSettings:
             "stamp_image": None,
             "stamp_position": "bottom-right",
             "stamp_settings": {
-                "width": 50,
-                "height": 50,
-                "text": "Avis Comunal\nPROT. N° {number}\ndel {date}",
+                "width": 100,
+                "height": 100,
+                "text": "Avis Comunale\nProt. N° {number}\ndel {date}",
                 "font_size": 10,
                 "font_family": "Arial",
                 "text_color": "#000000"
