@@ -1,34 +1,64 @@
-from datetime import datetime
 import os
+from datetime import datetime
 from .settings import ordina_settings as settings
-from docx.shared import Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from PIL import Image, ImageDraw, ImageFont
+from PyQt5.QtGui import QImage, QPainter, QFont, QColor
+from PyQt5.QtCore import Qt, QRectF
 
 def generate_protocol():
-    """Genera un numero di protocollo e timestamp."""
-    timestamp = datetime.now()
-    protocol_number = settings.get_next_protocol_number()
-    timestamp_formatted = timestamp.strftime("%d/%m/%Y %H:%M:%S")
-    return protocol_number, timestamp_formatted
+    """Genera il prossimo numero di protocollo"""
+    return settings.get_next_protocol_number()
 
-def get_output_path(file_path):
-    """Genera il percorso di output per il file protocollato."""
-    filename = f"protocollato_{os.path.basename(file_path)}"
-    output_dir = settings.get_output_directory()
-    return os.path.join(output_dir, filename) 
+def get_output_path(original_path):
+    """Genera il percorso di output per il file protocollato"""
+    filename = os.path.basename(original_path)
+    name, ext = os.path.splitext(filename)
+    
+    # Ottieni il numero di protocollo
+    protocol = generate_protocol()
+    
+    # Crea il nome del file
+    new_name = f"{name}__{protocol}{ext}"
+    
+    # Crea il percorso completo
+    year_folder = os.path.join(settings.get_output_directory(), settings.current_settings["year"])
+    os.makedirs(year_folder, exist_ok=True)
+    
+    return os.path.join(year_folder, new_name)
 
-def add_timestamp(doc):
-    """Aggiunge il timbro al documento"""
-    timestamp_para = doc.add_paragraph()
-    timestamp_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+def create_stamp(protocol_number):
+    """Crea il timbro come immagine"""
+    stamp_settings = settings.current_settings["stamp_settings"]
     
-    protocol_number = settings.get_next_protocol_number()
-    timestamp_run = timestamp_para.add_run(
-        f"Prot. N° {protocol_number}/{datetime.now().year}"
-    )
-    timestamp_run.font.name = "Arial"
-    timestamp_run.font.size = Pt(13)
-    timestamp_run.font.color.rgb = RGBColor(0, 0, 0)
+    # Crea un'immagine QImage con sfondo trasparente
+    img = QImage(stamp_settings["width"], stamp_settings["height"], QImage.Format_ARGB32)
+    img.fill(Qt.transparent)
     
-    doc.add_paragraph()
-    return doc 
+    # Prepara il painter
+    painter = QPainter(img)
+    painter.setRenderHint(QPainter.Antialiasing)
+    
+    # Imposta il font
+    font = QFont(stamp_settings["font_family"])
+    font.setPointSize(stamp_settings["font_size"])
+    painter.setFont(font)
+    
+    # Imposta il colore
+    painter.setPen(QColor(stamp_settings["text_color"]))
+    
+    # Prepara il testo
+    text = stamp_settings["text"]
+    text = text.replace("{number}", protocol_number)
+    text = text.replace("{date}", datetime.now().strftime("%d/%m/%Y"))
+    
+    # Disegna il testo
+    rect = QRectF(0, 0, img.width(), img.height())
+    painter.drawText(rect, Qt.AlignCenter, text)
+    
+    painter.end()
+    
+    # Converti QImage in PIL Image
+    buffer = img.bits().asstring(img.byteCount())
+    pil_image = Image.frombytes('RGBA', (img.width(), img.height()), buffer)
+    
+    return pil_image 

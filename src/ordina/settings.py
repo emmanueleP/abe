@@ -6,9 +6,14 @@ import base64
 from io import BytesIO
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton, QLabel, QGroupBox,
-    QHBoxLayout, QSpinBox, QComboBox, QFileDialog, QMessageBox
+    QHBoxLayout, QSpinBox, QComboBox, QFileDialog, QMessageBox,
+    QTabWidget, QGridLayout, QTextEdit, QFontComboBox, QColorDialog,
+    QWidget
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import (
+    QFont, QImage, QPainter, QColor, QPixmap
+)
+from PyQt5.QtCore import Qt, QRectF
 
 class OrdinaSettings:
     def __init__(self):
@@ -26,10 +31,18 @@ class OrdinaSettings:
             "theme": "dark",
             "year": str(datetime.now().year),
             "last_protocol_number": 0,
-            "protocol_format": "PROT-{year}-{number:05d}",
+            "protocol_format": "Prot. N° {number}/{year}",
             "output_directory": os.path.join(user_docs, "Ordina_protocolli"),
             "stamp_image": None,
-            "stamp_position": "bottom-right"
+            "stamp_position": "bottom-right",
+            "stamp_settings": {
+                "width": 50,
+                "height": 50,
+                "text": "Avis Comunal\nPROT. N° {number}\ndel {date}",
+                "font_size": 10,
+                "font_family": "Arial",
+                "text_color": "#000000"
+            }
         }
         self.current_settings = self.load_settings()
         self.ensure_output_directory()
@@ -128,8 +141,14 @@ class SettingsDialog(QDialog):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        layout.setSpacing(20)
-
+        
+        # Crea il tab widget
+        tab_widget = QTabWidget()
+        
+        # Tab Generale (esistente)
+        general_tab = QWidget()
+        general_layout = QVBoxLayout()
+        
         # Tema
         theme_group = QGroupBox("Tema")
         theme_layout = QHBoxLayout()
@@ -140,7 +159,7 @@ class SettingsDialog(QDialog):
         theme_layout.addWidget(theme_label)
         theme_layout.addWidget(self.theme_combo)
         theme_group.setLayout(theme_layout)
-        layout.addWidget(theme_group)
+        general_layout.addWidget(theme_group)
 
         # Anno e Reset
         year_group = QGroupBox("Gestione Anno e Protocollo")
@@ -171,7 +190,7 @@ class SettingsDialog(QDialog):
         year_layout.addLayout(reset_row)
         
         year_group.setLayout(year_layout)
-        layout.addWidget(year_group)
+        general_layout.addWidget(year_group)
 
         # Directory Output
         dir_group = QGroupBox("Directory Output")
@@ -182,14 +201,105 @@ class SettingsDialog(QDialog):
         change_dir_btn.clicked.connect(self.change_output_dir)
         dir_layout.addWidget(change_dir_btn)
         dir_group.setLayout(dir_layout)
-        layout.addWidget(dir_group)
+        general_layout.addWidget(dir_group)
 
+        general_tab.setLayout(general_layout)
+        tab_widget.addTab(general_tab, "Generale")
+        
+        # Tab Timbro
+        stamp_tab = QWidget()
+        stamp_layout = QVBoxLayout()
+        
+        # Dimensioni timbro
+        size_group = QGroupBox("Dimensioni Timbro")
+        size_layout = QGridLayout()
+        
+        # Larghezza
+        size_layout.addWidget(QLabel("Larghezza (px):"), 0, 0)
+        self.width_spin = QSpinBox()
+        self.width_spin.setRange(50, 500)
+        self.width_spin.setValue(ordina_settings.current_settings["stamp_settings"]["width"])
+        size_layout.addWidget(self.width_spin, 0, 1)
+        
+        # Altezza
+        size_layout.addWidget(QLabel("Altezza (px):"), 1, 0)
+        self.height_spin = QSpinBox()
+        self.height_spin.setRange(50, 500)
+        self.height_spin.setValue(ordina_settings.current_settings["stamp_settings"]["height"])
+        size_layout.addWidget(self.height_spin, 1, 1)
+        
+        size_group.setLayout(size_layout)
+        stamp_layout.addWidget(size_group)
+        
+        # Testo timbro
+        text_group = QGroupBox("Testo Timbro")
+        text_layout = QVBoxLayout()
+        
+        self.stamp_text = QTextEdit()
+        self.stamp_text.setPlainText(ordina_settings.current_settings["stamp_settings"]["text"])
+        text_layout.addWidget(QLabel("Usa {number} per il numero protocollo e {date} per la data"))
+        text_layout.addWidget(self.stamp_text)
+        
+        # Font
+        font_layout = QHBoxLayout()
+        font_layout.addWidget(QLabel("Font:"))
+        self.font_combo = QFontComboBox()
+        self.font_combo.setCurrentFont(QFont(ordina_settings.current_settings["stamp_settings"]["font_family"]))
+        font_layout.addWidget(self.font_combo)
+        
+        # Dimensione font
+        self.font_size = QSpinBox()
+        self.font_size.setRange(8, 24)
+        self.font_size.setValue(ordina_settings.current_settings["stamp_settings"]["font_size"])
+        font_layout.addWidget(self.font_size)
+        
+        text_layout.addLayout(font_layout)
+        
+        # Colore testo
+        color_layout = QHBoxLayout()
+        color_layout.addWidget(QLabel("Colore testo:"))
+        self.color_button = QPushButton()
+        self.color_button.setFixedSize(30, 30)
+        self.current_color = QColor(ordina_settings.current_settings["stamp_settings"]["text_color"])
+        self.color_button.setStyleSheet(f"background-color: {self.current_color.name()}")
+        self.color_button.clicked.connect(self.choose_color)
+        color_layout.addWidget(self.color_button)
+        color_layout.addStretch()
+        
+        text_layout.addLayout(color_layout)
+        text_group.setLayout(text_layout)
+        stamp_layout.addWidget(text_group)
+        
+        # Anteprima
+        preview_group = QGroupBox("Anteprima")
+        preview_layout = QVBoxLayout()
+        self.preview_label = QLabel()
+        self.preview_label.setAlignment(Qt.AlignCenter)
+        preview_layout.addWidget(self.preview_label)
+        preview_group.setLayout(preview_layout)
+        stamp_layout.addWidget(preview_group)
+        
+        stamp_tab.setLayout(stamp_layout)
+        tab_widget.addTab(stamp_tab, "Timbro")
+        
+        layout.addWidget(tab_widget)
+        
         # Pulsante salva
         save_button = QPushButton("Salva")
         save_button.clicked.connect(self.save_settings)
         layout.addWidget(save_button)
-
+        
         self.setLayout(layout)
+        
+        # Aggiorna anteprima iniziale
+        self.update_preview()
+        
+        # Connetti i segnali per l'aggiornamento dell'anteprima
+        self.width_spin.valueChanged.connect(self.update_preview)
+        self.height_spin.valueChanged.connect(self.update_preview)
+        self.stamp_text.textChanged.connect(self.update_preview)
+        self.font_combo.currentFontChanged.connect(self.update_preview)
+        self.font_size.valueChanged.connect(self.update_preview)
 
     def reset_protocol(self):
         reply = QMessageBox.question(
@@ -220,9 +330,61 @@ class SettingsDialog(QDialog):
             ordina_settings.set_output_directory(dir_path)
             self.dir_label.setText(dir_path)
 
+    def choose_color(self):
+        color = QColorDialog.getColor(self.current_color, self)
+        if color.isValid():
+            self.current_color = color
+            self.color_button.setStyleSheet(f"background-color: {color.name()}")
+            self.update_preview()
+
+    def update_preview(self):
+        """Aggiorna l'anteprima del timbro"""
+        # Crea un'immagine vuota per l'anteprima
+        preview = QImage(self.width_spin.value(), self.height_spin.value(), 
+                        QImage.Format_ARGB32)
+        preview.fill(Qt.transparent)
+        
+        # Prepara il painter
+        painter = QPainter(preview)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Imposta il font
+        font = self.font_combo.currentFont()
+        font.setPointSize(self.font_size.value())
+        painter.setFont(font)
+        
+        # Imposta il colore
+        painter.setPen(self.current_color)
+        
+        # Disegna il testo
+        text = self.stamp_text.toPlainText()
+        text = text.replace("{number}", "12345")
+        text = text.replace("{date}", datetime.now().strftime("%d/%m/%Y"))
+        
+        rect = QRectF(0, 0, preview.width(), preview.height())
+        painter.drawText(rect, Qt.AlignCenter, text)
+        
+        painter.end()
+        
+        # Mostra l'anteprima
+        pixmap = QPixmap.fromImage(preview)
+        self.preview_label.setPixmap(pixmap)
+
     def save_settings(self):
+        # Salva le impostazioni esistenti
         ordina_settings.set_theme(self.theme_combo.currentText())
         ordina_settings.current_settings["year"] = str(self.year_spin.value())
+        
+        # Salva le impostazioni del timbro
+        ordina_settings.current_settings["stamp_settings"].update({
+            "width": self.width_spin.value(),
+            "height": self.height_spin.value(),
+            "text": self.stamp_text.toPlainText(),
+            "font_family": self.font_combo.currentFont().family(),
+            "font_size": self.font_size.value(),
+            "text_color": self.current_color.name()
+        })
+        
         ordina_settings.save_settings()
         ordina_settings.ensure_output_directory()
         self.accept()
