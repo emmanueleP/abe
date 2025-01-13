@@ -13,7 +13,7 @@ class PDFtoASettings:
         self.settings_file = os.path.join(self.config_dir, "pdftoa_config.json")
         
         self.default_settings = {
-            "output_directory": os.path.join(os.path.expanduser("~"), "Documents", "PDF_A"),
+            "output_directory": os.path.join(os.path.expanduser("~"), "Documents", "Abe", "PDFtoA"),
             "last_directory": ""
         }
         self.current_settings = self.load_settings()

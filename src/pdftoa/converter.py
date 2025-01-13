@@ -19,7 +19,7 @@ class PDFConverter:
             # Se non è specificato un output_path, ne crea uno
             if output_path is None:
                 base_path = os.path.splitext(input_path)[0]
-                output_path = f"{base_path}_PDFA.pdf"
+                output_path = f"{base_path}.pdf"
 
             # Apri il PDF
             with pikepdf.Pdf.open(input_path) as pdf:

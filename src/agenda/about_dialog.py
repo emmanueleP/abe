@@ -13,7 +13,7 @@ class AboutDialog(QDialog):
         layout.setSpacing(20)
 
         # Logo o titolo
-        title = QLabel("PDFtoA")
+        title = QLabel("Agenda")
         title.setStyleSheet("font-size: 16pt; font-weight: bold;")
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -25,9 +25,7 @@ class AboutDialog(QDialog):
 
         # Descrizione
         description = QLabel(
-            "Questo software permette di convertire file PDF "
-            "nel formato PDF/A, utile per l'archiviazione "
-            "a lungo termine dei documenti."
+            "Gestione calendario e promemoria.\n"
         )
         description.setWordWrap(True)
         description.setAlignment(Qt.AlignJustify)

@@ -96,13 +96,9 @@ class AgendaGUI(QMainWindow):
                 )
     
     def show_about(self):
-        QMessageBox.about(
-            self,
-            "Informazioni",
-            "Agenda v1.0.0\n\n"
-            "Applicazione per la gestione di eventi e promemoria\n\n"
-            "© 2025 Emmanuele Pani"
-        )
+        from .about_dialog import AboutDialog
+        dialog = AboutDialog(self)
+        dialog.exec_()
         
     def setup_ui(self):
         central_widget = QWidget()

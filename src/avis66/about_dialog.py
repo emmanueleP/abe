@@ -19,7 +19,7 @@ class AboutDialog(QDialog):
         layout.addWidget(title)
 
         # Versione
-        version = QLabel("Versione 1.0.0")
+        version = QLabel("Versione 1.0.1")
         version.setAlignment(Qt.AlignCenter)
         layout.addWidget(version)
 
@@ -27,7 +27,7 @@ class AboutDialog(QDialog):
         description = QLabel(
             "Gestione registro soci e volontari Avis.\n"
             "Permette di gestire l'archivio dei soci con funzionalità "
-            "di importazione ed esportazione dati."
+            "di importazione ed esportazione dati secondo il modello SIAN."
         )
         description.setWordWrap(True)
         description.setAlignment(Qt.AlignJustify)

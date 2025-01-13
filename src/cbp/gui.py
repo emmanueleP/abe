@@ -277,6 +277,13 @@ class CbpGUI(QMainWindow):
         settings_action.triggered.connect(self.show_settings)
         settings_menu.addAction(settings_action)
 
+        #Menu Informazioni
+        info_menu = menubar.addMenu("Help")
+
+        about_action = QAction("Informazioni", self)
+        about_action.triggered.connect(self.show_about)
+        info_menu.addAction(about_action)
+
     def get_current_table(self):
         """Restituisce la tabella attualmente selezionata"""
         if self.entrate_table.hasFocus():
@@ -299,6 +306,12 @@ class CbpGUI(QMainWindow):
         """Mostra la finestra delle impostazioni"""
         from .settings import SettingsDialog
         dialog = SettingsDialog(self)
+        dialog.exec_()
+
+    def show_about(self):
+        """Mostra la finestra delle informazioni"""
+        from .about_dialog import AboutDialog
+        dialog = AboutDialog(self)
         dialog.exec_()
 
     def new_file(self):

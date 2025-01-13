@@ -20,7 +20,7 @@ class AboutDialog(QDialog):
         general_tab.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         general_tab.setWordWrap(True)
         general_tab.setText(
-            "<h2>Abe-Gestionale v1.0.0</h2>"
+            "<h2>Abe-Gestionale v1.0.1</h2>"
             "<p>Suite di applicazioni per la gestione della segreteria di una sede Avis.</p>"
             "<h3>Applicazioni:</h3>"
             "<ul>"
@@ -58,10 +58,9 @@ class AboutDialog(QDialog):
         contacts_tab.setWordWrap(True)
         contacts_tab.setText(
             "<h3>Contatti</h3>"
-            "<p><b>Sviluppatore:</b> Emmanuele Pani</p>"
-            "<p><b>Email:</b> emmanuele.pani@gmail.com</p>"
+            "<p><b>Developed by:</b> Emmanuele Pani</p>"
             "<p><b>GitHub:</b> github.com/emmanueleP</p>"
-            "<h3>Segnalazione Bug</h3>"
+            "<h3>Report Bug</h3>"
             "<p>Per segnalare problemi o suggerire miglioramenti, "
             "apri una issue su GitHub.</p>"
         )
