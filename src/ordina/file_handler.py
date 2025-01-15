@@ -1,67 +1,113 @@
 import os
-from PyQt5.QtCore import QFileInfo
+from PyQt5.QtCore import Qt
 from PIL import Image
 import fitz  # PyMuPDF
 from docx import Document
 import openpyxl
-from .utils import get_output_path, create_stamp
+from .utils import create_stamp, get_output_path
+from .settings import ordina_settings as settings
 import io
 from .history_dialog import add_to_history
 
 def handle_file(file_path):
     """Gestisce il file in base al suo tipo"""
     try:
-        file_info = QFileInfo(file_path)
-        extension = file_info.suffix().lower()
-        
         # Ottieni il percorso di output
         output_path = get_output_path(file_path)
+        print(f"Output path: {output_path}")  # Debug
+        
+        # Ottieni il nome del file
+        base_name = os.path.basename(output_path)
+        print(f"Base name: {base_name}")  # Debug
+        
+        # Verifica che il nome del file contenga '__'
+        if '__' not in base_name:
+            raise Exception("Nome file non valido: manca il separatore '__'")
+            
+        # Split del nome file e verifica lunghezza
+        parts = base_name.split('__')
+        if len(parts) != 2:
+            raise Exception(f"Nome file non valido: formato errato ({base_name})")
+            
+        # Ottieni il numero di protocollo
+        protocol_parts = parts[1].split('.')
+        if len(protocol_parts) < 1:
+            raise Exception(f"Nome file non valido: manca il numero di protocollo ({parts[1]})")
+            
+        protocol_number = protocol_parts[0]
+        print(f"Protocol number: {protocol_number}")  # Debug
         
         # Crea il timbro
-        stamp = create_stamp(os.path.basename(output_path).split("__")[1].split(".")[0])
+        stamp = create_stamp(protocol_number)
+        if stamp is None:
+            raise Exception("Errore nella creazione del timbro")
+            
+        # Gestisci il file in base all'estensione
+        ext = os.path.splitext(file_path)[1].lower()
+        print(f"File extension: {ext}")  # Debug
         
-        if extension == "pdf":
+        if ext == '.pdf':
             handle_pdf(file_path, output_path, stamp)
-        elif extension == "docx":
+        elif ext == '.docx':
             handle_docx(file_path, output_path, stamp)
-        elif extension == "xlsx":
+        elif ext == '.xlsx':
             handle_xlsx(file_path, output_path, stamp)
-        elif extension in ["png", "jpg", "jpeg"]:
+        elif ext in ['.png', '.jpg', '.jpeg']:
             handle_image(file_path, output_path, stamp)
         else:
-            raise ValueError(f"Formato file non supportato: {extension}")
+            raise Exception(f"Formato file non supportato: {ext}")
         
         # Aggiungi alla cronologia
-        protocol_number = os.path.basename(output_path).split("__")[1].split(".")[0]
         add_to_history(protocol_number, output_path)
         
         return output_path
         
     except Exception as e:
+        print(f"DEBUG - Errore dettagliato: {str(e)}")  # Debug
         raise Exception(f"Errore durante la protocollazione: {str(e)}")
 
 def handle_pdf(input_path, output_path, stamp):
     """Gestisce file PDF"""
-    # Apri il PDF
-    pdf = fitz.open(input_path)
-    first_page = pdf[0]
-    
-    # Converti il timbro in PNG e ottieni i bytes
-    img_byte_arr = io.BytesIO()
-    stamp.save(img_byte_arr, format='PNG')
-    stamp_bytes = img_byte_arr.getvalue()
-    
-    # Calcola la posizione del timbro (in basso a destra)
-    page_rect = first_page.rect
-    x = page_rect.width - stamp.width - 50  # 50 pixel dal bordo destro
-    y = page_rect.height - stamp.height - 50  # 50 pixel dal bordo inferiore
-    
-    # Inserisci il timbro
-    first_page.insert_image((x, y, x + stamp.width, y + stamp.height), stream=stamp_bytes)
-    
-    # Salva il PDF
-    pdf.save(output_path)
-    pdf.close()
+    try:
+        # Apri il PDF
+        pdf = fitz.open(input_path)
+        
+        # Converti il timbro PIL in bytes
+        stamp_bytes = io.BytesIO()
+        stamp.save(stamp_bytes, format='PNG')
+        stamp_bytes = stamp_bytes.getvalue()
+        
+        # Inserisci il timbro nella prima pagina
+        first_page = pdf[0]
+        
+        # Calcola la posizione del timbro
+        stamp_position = settings.current_settings.get("stamp_position", "top-right")
+        rect = first_page.rect
+        stamp_width = stamp.width / 2  # Converti da pixel a punti PDF
+        stamp_height = stamp.height / 2
+        
+        if stamp_position == "top-right":
+            x = rect.width - stamp_width - 20
+            y = 20
+        elif stamp_position == "top-left":
+            x = 20
+            y = 20
+        elif stamp_position == "bottom-right":
+            x = rect.width - stamp_width - 20
+            y = rect.height - stamp_height - 20
+        else:  # bottom-left
+            x = 20
+            y = rect.height - stamp_height - 20
+        
+        # Inserisci il timbro
+        first_page.insert_image((x, y, x + stamp_width, y + stamp_height), stream=stamp_bytes)
+        
+        # Salva il PDF
+        pdf.save(output_path)
+        pdf.close()
+        
+    except Exception as e:
+        raise Exception(f"Errore nella gestione del PDF: {str(e)}")
 
 def handle_docx(input_path, output_path, stamp):
     """Gestisce file Word"""

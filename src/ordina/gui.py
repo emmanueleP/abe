@@ -145,7 +145,7 @@ class ProtocolGUI(QMainWindow):
 
         try:
             result = handle_file(self.file_path)
-            QMessageBox.information(self, "Successo", result)
+            QMessageBox.information(self, "Protocollo completato", result)
             self.preview_label.setText(result)
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Errore durante la protocollazione: {str(e)}")
@@ -197,3 +197,30 @@ class ProtocolGUI(QMainWindow):
         """Gestisce l'evento di chiusura della finestra"""
         self.closed.emit()  # Emette il segnale che farà riapparire la finestra di benvenuto
         event.accept()
+
+    def handle_drop(self, file_path):
+        """Gestisce il file trascinato"""
+        try:
+            output_path = handle_file(file_path)
+            
+            # Mostra il messaggio di successo con il percorso
+            QMessageBox.information(
+                self,
+                "Protocollo Completato",
+                f"Protocollo completato con successo in:\n{output_path}"
+            )
+            
+            # Aggiorna il numero del prossimo protocollo
+            current_number = settings.current_settings["last_protocol_number"] + 1
+            self.protocol_label.setText(f"Prossimo numero: {current_number:05d}")
+            
+            # Apri la cartella contenente il file
+            output_dir = os.path.dirname(output_path)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(output_dir))
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                str(e)
+            )

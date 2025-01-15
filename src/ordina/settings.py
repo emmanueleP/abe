@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton, QLabel, QGroupBox,
     QHBoxLayout, QSpinBox, QComboBox, QFileDialog, QMessageBox,
     QTabWidget, QGridLayout, QTextEdit, QFontComboBox, QColorDialog,
-    QWidget
+    QWidget, QLineEdit
 )
 from PyQt5.QtGui import (
     QFont, QImage, QPainter, QColor, QPixmap
@@ -34,13 +34,14 @@ class OrdinaSettings:
             "protocol_format": "Prot. N° {number}/{year}",
             "output_directory": os.path.join(user_docs, "Ordina_protocolli"),
             "stamp_image": None,
-            "stamp_position": "bottom-right",
+            "stamp_position": "top-right",
+            "location": "Cagliari",
             "stamp_settings": {
-                "width": 100,
-                "height": 100,
-                "text": "Avis Comunale\nProt. N° {number}\ndel {date}",
-                "font_size": 10,
-                "font_family": "Arial",
+                "width": 150,
+                "height": 150,
+                "text": "Avis Comunale\n{location}\nProt. N° {number}\ndel {date}",
+                "font_size": 8,
+                "font_family": "Times New Roman",
                 "text_color": "#000000"
             }
         }
@@ -74,18 +75,19 @@ class OrdinaSettings:
 
     def get_next_protocol_number(self):
         """Genera il prossimo numero di protocollo"""
-        current_year = str(datetime.now().year)
-        if current_year != self.current_settings["year"]:
-            self.current_settings["year"] = current_year
-            self.current_settings["last_protocol_number"] = 0
-        
-        self.current_settings["last_protocol_number"] += 1
-        self.save_settings()
-        
-        return self.current_settings["protocol_format"].format(
-            year=self.current_settings["year"],
-            number=self.current_settings["last_protocol_number"]
-        )
+        try:
+            current = self.current_settings["last_protocol_number"]
+            next_number = current + 1
+            print(f"Current protocol: {current}, Next: {next_number}")  # Debug
+            
+            self.current_settings["last_protocol_number"] = next_number
+            self.save_settings()
+            
+            return f"{next_number:05d}"
+            
+        except Exception as e:
+            print(f"DEBUG - Errore in get_next_protocol_number: {str(e)}")  # Debug
+            raise Exception(f"Errore nella generazione del numero di protocollo: {str(e)}")
 
     def get_output_directory(self):
         """Restituisce la directory di output per i file protocollati."""
@@ -135,8 +137,8 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Impostazioni")
-        self.setMinimumWidth(500)
-        self.setMinimumHeight(400)
+        self.setMinimumWidth(700)
+        self.setMinimumHeight(900)
         self.setup_ui()
 
     def setup_ui(self):
@@ -144,23 +146,12 @@ class SettingsDialog(QDialog):
         
         # Crea il tab widget
         tab_widget = QTabWidget()
+        layout.addWidget(tab_widget)  # Aggiungi subito il tab widget al layout principale
         
-        # Tab Generale (esistente)
+        # Tab Generale
         general_tab = QWidget()
         general_layout = QVBoxLayout()
         
-        # Tema
-        theme_group = QGroupBox("Tema")
-        theme_layout = QHBoxLayout()
-        theme_label = QLabel("Tema:")
-        self.theme_combo = QComboBox()
-        self.theme_combo.addItems(["light", "dark"])
-        self.theme_combo.setCurrentText(ordina_settings.get_theme())
-        theme_layout.addWidget(theme_label)
-        theme_layout.addWidget(self.theme_combo)
-        theme_group.setLayout(theme_layout)
-        general_layout.addWidget(theme_group)
-
         # Anno e Reset
         year_group = QGroupBox("Gestione Anno e Protocollo")
         year_layout = QVBoxLayout()
@@ -195,34 +186,46 @@ class SettingsDialog(QDialog):
         # Directory Output
         dir_group = QGroupBox("Directory Output")
         dir_layout = QHBoxLayout()
+        
         self.dir_label = QLabel(ordina_settings.current_settings["output_directory"])
         dir_layout.addWidget(self.dir_label)
+        
         change_dir_btn = QPushButton("Cambia")
         change_dir_btn.clicked.connect(self.change_output_dir)
         dir_layout.addWidget(change_dir_btn)
+        
         dir_group.setLayout(dir_layout)
         general_layout.addWidget(dir_group)
 
         general_tab.setLayout(general_layout)
         tab_widget.addTab(general_tab, "Generale")
-        
+
         # Tab Timbro
         stamp_tab = QWidget()
         stamp_layout = QVBoxLayout()
+
+        # Location 
+        location_group = QGroupBox("Località")
+        location_layout = QHBoxLayout()
         
+        self.location_input = QLineEdit()
+        self.location_input.setText(ordina_settings.current_settings.get("location", "Inserisci località"))
+        location_layout.addWidget(self.location_input)
+        
+        location_group.setLayout(location_layout)
+        stamp_layout.addWidget(location_group)
+
         # Dimensioni timbro
         size_group = QGroupBox("Dimensioni Timbro")
         size_layout = QGridLayout()
         
-        # Larghezza
-        size_layout.addWidget(QLabel("Larghezza (px):"), 0, 0)
+        size_layout.addWidget(QLabel("Larghezza:"), 0, 0)
         self.width_spin = QSpinBox()
         self.width_spin.setRange(50, 500)
         self.width_spin.setValue(ordina_settings.current_settings["stamp_settings"]["width"])
         size_layout.addWidget(self.width_spin, 0, 1)
         
-        # Altezza
-        size_layout.addWidget(QLabel("Altezza (px):"), 1, 0)
+        size_layout.addWidget(QLabel("Altezza:"), 1, 0)
         self.height_spin = QSpinBox()
         self.height_spin.setRange(50, 500)
         self.height_spin.setValue(ordina_settings.current_settings["stamp_settings"]["height"])
@@ -230,14 +233,14 @@ class SettingsDialog(QDialog):
         
         size_group.setLayout(size_layout)
         stamp_layout.addWidget(size_group)
-        
+
         # Testo timbro
         text_group = QGroupBox("Testo Timbro")
         text_layout = QVBoxLayout()
         
         self.stamp_text = QTextEdit()
         self.stamp_text.setPlainText(ordina_settings.current_settings["stamp_settings"]["text"])
-        text_layout.addWidget(QLabel("Usa {number} per il numero protocollo e {date} per la data"))
+        text_layout.addWidget(QLabel("Usa {number} per il numero protocollo, {date} per la data e {location} per il luogo"))
         text_layout.addWidget(self.stamp_text)
         
         # Font
@@ -281,9 +284,31 @@ class SettingsDialog(QDialog):
         
         stamp_tab.setLayout(stamp_layout)
         tab_widget.addTab(stamp_tab, "Timbro")
+
+        # Tab Tema
+        theme_tab = QWidget()
+        theme_layout = QVBoxLayout()  # Cambiato da QHBoxLayout a QVBoxLayout
+
+        # Tema
+        theme_group = QGroupBox("Tema")
+        theme_box_layout = QHBoxLayout()  # Layout interno del gruppo
         
-        layout.addWidget(tab_widget)
+        theme_label = QLabel("Tema:")
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["light", "dark"])
+        self.theme_combo.setCurrentText(ordina_settings.get_theme())
         
+        theme_box_layout.addWidget(theme_label)
+        theme_box_layout.addWidget(self.theme_combo)
+        theme_box_layout.addStretch()  # Aggiunge spazio flessibile
+        
+        theme_group.setLayout(theme_box_layout)
+        theme_layout.addWidget(theme_group)
+        theme_layout.addStretch()  # Aggiunge spazio flessibile verticale
+        
+        theme_tab.setLayout(theme_layout)
+        tab_widget.addTab(theme_tab, "Tema")
+
         # Pulsante salva
         save_button = QPushButton("Salva")
         save_button.clicked.connect(self.save_settings)
@@ -300,6 +325,7 @@ class SettingsDialog(QDialog):
         self.stamp_text.textChanged.connect(self.update_preview)
         self.font_combo.currentFontChanged.connect(self.update_preview)
         self.font_size.valueChanged.connect(self.update_preview)
+        self.location_input.textChanged.connect(self.update_preview)
 
     def reset_protocol(self):
         reply = QMessageBox.question(
@@ -360,6 +386,7 @@ class SettingsDialog(QDialog):
         text = self.stamp_text.toPlainText()
         text = text.replace("{number}", "12345")
         text = text.replace("{date}", datetime.now().strftime("%d/%m/%Y"))
+        text = text.replace("{location}", self.location_input.text())
         
         rect = QRectF(0, 0, preview.width(), preview.height())
         painter.drawText(rect, Qt.AlignCenter, text)
@@ -374,6 +401,7 @@ class SettingsDialog(QDialog):
         # Salva le impostazioni esistenti
         ordina_settings.set_theme(self.theme_combo.currentText())
         ordina_settings.current_settings["year"] = str(self.year_spin.value())
+        ordina_settings.current_settings["location"] = self.location_input.text()
         
         # Salva le impostazioni del timbro
         ordina_settings.current_settings["stamp_settings"].update({
