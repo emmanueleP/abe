@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QPushButton, QLabel,
-    QWidget, QHBoxLayout, QMessageBox, QMenuBar, QMenu, QAction, QActionGroup, QTabWidget, QDialog, QSpacerItem, QSizePolicy
+    QWidget, QHBoxLayout, QMessageBox, QMenuBar, QMenu, QAction, QActionGroup, QTabWidget, QDialog, QSpacerItem, QSizePolicy, QApplication
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QSize
 from PyQt5.QtGui import QFont, QIcon, QPixmap
@@ -24,8 +24,29 @@ class WelcomeDialog(QMainWindow):
         super().__init__()
         self.app = app
         self.setWindowTitle("Abe-Gestionale")
-        self.showMaximized()
+        self.setBaseSize(1080, 720)
+        self.update_checker = None  
+        self.center()
+        self.setup_menu()
+        self.setup_ui()
+        
+        # Controlla aggiornamenti all'avvio se abilitato
+        self.check_updates_on_startup()
+    # Centra la finestra all'apertura
+    def showEvent(self, event):
+        self.center()
+        super().showEvent(event)
     
+    def center(self):
+        screen = QApplication.primaryScreen().availableGeometry()
+        size = self.frameGeometry()
+         # Calcola la posizione centrale
+        x = (screen.width() - size.width()) // 2
+        y = (screen.height() - size.height()) // 2
+
+        # Imposta la posizione
+        self.move(x, y)
+
     # Imposta l'icona dell'applicazione
         icon_path = os.path.join("src", "assets", "logo_abe.ico")
         if os.path.exists(icon_path):
@@ -316,9 +337,23 @@ class WelcomeDialog(QMainWindow):
         self.current_app.show()
 
     def closeEvent(self, event):
-        if hasattr(self, 'update_checker'):
-            self.update_checker.stop()
-        self.closed.emit()
+        """Gestisce la chiusura della finestra"""
+        if self.update_checker is not None:
+            try:
+                # Disconnetti i segnali
+                self.update_checker.update_available.disconnect()
+                self.update_checker.error_occurred.disconnect()
+                
+                # Imposta il flag di stop
+                self.update_checker.stop_requested = True
+                
+                # Termina il thread in modo sicuro
+                self.update_checker.quit()
+                self.update_checker = None
+                
+            except Exception as e:
+                print(f"Errore durante la chiusura del thread dell'updater: {e}")
+        
         event.accept()
 
     def show_update_settings(self):
@@ -326,17 +361,27 @@ class WelcomeDialog(QMainWindow):
         dialog.exec_()
 
     def check_updates_on_startup(self):
+        """Controlla gli aggiornamenti all'avvio"""
         try:
+            # Verifica che non ci sia già un update_checker attivo
+            if self.update_checker is not None:
+                return
+                
             with open('data/config/config.json', 'r') as f:
                 config = json.load(f)
                 if config.get('updates', {}).get('auto_check', True):
-                    self.update_checker = UpdateChecker("1.0.0")  # Mantieni il riferimento
+                    self.update_checker = UpdateChecker("1.0.0")
                     self.update_checker.update_available.connect(self.show_update_available)
-                    self.update_checker.error_occurred.connect(lambda e: print(f"Errore aggiornamenti: {e}"))
+                    self.update_checker.error_occurred.connect(
+                        lambda e: print(f"Errore aggiornamenti: {e}")
+                    )
                     self.update_checker.start()
         except Exception as e:
             print(f"Errore nel controllo aggiornamenti: {e}")
 
     def show_update_available(self, version, release_notes):
-        dialog = UpdateDialog(self, version, release_notes)
-        dialog.exec_()
+        """Mostra il dialog degli aggiornamenti disponibili"""
+        # Verifica che il dialog non sia già aperto
+        if not hasattr(self, 'update_dialog') or not self.update_dialog.isVisible():
+            self.update_dialog = UpdateDialog(self, version, release_notes)
+            self.update_dialog.exec_()

@@ -20,7 +20,7 @@ class AboutDialog(QDialog):
         general_tab.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         general_tab.setWordWrap(True)
         general_tab.setText(
-            "<h2>Abe-Gestionale v1.0.2</h2>"
+            "<h2>Abe-Gestionale v1.0.3</h2>"
             "<p>Suite di applicazioni per la gestione della segreteria di una sede Avis.</p>"
             "<h3>Applicazioni:</h3>"
             "<ul>"
