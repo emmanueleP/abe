@@ -14,6 +14,7 @@ from src.updater import UpdateSettings, UpdateChecker, UpdateDialog
 from .about_abe import AboutDialog
 from .manual_abe import ManualDialog
 from .utils import get_asset_path
+from .installer_newver import check_for_updates
 import json
 import os
 
@@ -363,19 +364,15 @@ class WelcomeDialog(QMainWindow):
     def check_updates_on_startup(self):
         """Controlla gli aggiornamenti all'avvio"""
         try:
-            # Verifica che non ci sia già un update_checker attivo
             if self.update_checker is not None:
                 return
                 
             with open('data/config/config.json', 'r') as f:
                 config = json.load(f)
                 if config.get('updates', {}).get('auto_check', True):
-                    self.update_checker = UpdateChecker("1.0.0")
-                    self.update_checker.update_available.connect(self.show_update_available)
-                    self.update_checker.error_occurred.connect(
-                        lambda e: print(f"Errore aggiornamenti: {e}")
-                    )
-                    self.update_checker.start()
+                    self.update_checker = check_for_updates("1.0.4")  # Versione corrente
+                    self.update_checker.update_completed.connect(self.on_update_completed)
+                    self.update_checker.update_error.connect(self.on_update_error)
         except Exception as e:
             print(f"Errore nel controllo aggiornamenti: {e}")
 
@@ -385,3 +382,11 @@ class WelcomeDialog(QMainWindow):
         if not hasattr(self, 'update_dialog') or not self.update_dialog.isVisible():
             self.update_dialog = UpdateDialog(self, version, release_notes)
             self.update_dialog.exec_()
+
+    def on_update_completed(self, message):
+        """Gestisce la fine dell'aggiornamento"""
+        QMessageBox.information(self, "Aggiornamento completato", message)
+
+    def on_update_error(self, error_message):
+        """Gestisce un errore durante l'aggiornamento"""
+        QMessageBox.critical(self, "Errore durante l'aggiornamento", error_message)
