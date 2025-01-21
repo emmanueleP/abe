@@ -9,6 +9,9 @@ from .settings import manrev_settings
 from .generator import generate_documents
 from .about_dialog import AboutDialog
 from ..utils import get_asset_path
+from .print_aftergen import print_manager
+import os
+from datetime import datetime
 
 class ManRevGUI(QMainWindow):
     closed = pyqtSignal()
@@ -168,9 +171,62 @@ class ManRevGUI(QMainWindow):
         layout.addWidget(self.generate_button)
 
     def generate_document(self):
-        """Avvia la generazione del documento"""
-        from .generator import generate_document
-        generate_document(self)
+        """Genera il documento"""
+        try:
+            # Crea il dizionario con i dati del documento
+            doc_data = {
+                'Tipo': self.doc_type.currentText(),
+                'Numero': self.number_input.text(),
+                'Capitolo': self.chapter_input.currentText(),
+                'Importo in €': self.amount_input.text(),
+                'Descrizione del pagamento': self.description_input.toPlainText(),
+                'Data': self.date_input.date().toString("dd/MM/yyyy"),
+                'Luogo': self.place_input.text(),
+                'Il Tesoriere': self.treasurer_input.text(),
+                'Il Presidente': self.president_input.text(),
+                "L'Addetto Contabile": self.accountant_input.text(),
+                'anno': datetime.now().strftime("%Y")
+            }
+            
+            # Prepara il percorso del file
+            output_dir = manrev_settings.current_settings.get("output_directory", "")
+            if not output_dir:
+                output_dir = os.path.join(os.path.expanduser("~"), "Documents", "Abe", "ManRev")
+            os.makedirs(output_dir, exist_ok=True)
+            
+            filename = f"{doc_data['Tipo']}_{doc_data['Numero']}_{datetime.now().strftime('%Y%m%d')}.docx"
+            output_file = os.path.join(output_dir, filename)
+            
+            # Genera il documento
+            output_file = generate_documents(doc_data, output_file)
+            
+            # Stampa solo se il checkbox è selezionato
+            if self.print_check.isChecked():
+                if print_manager.print_document(output_file, self):
+                    QMessageBox.information(
+                        self,
+                        "Completato",
+                        "Il documento è stato generato e stampato con successo."
+                    )
+                else:
+                    QMessageBox.information(
+                        self,
+                        "Completato",
+                        "Il documento è stato generato ma non stampato."
+                    )
+            else:
+                QMessageBox.information(
+                    self,
+                    "Completato",
+                    f"Il documento è stato generato in:\n{output_file}"
+                )
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Errore",
+                f"Errore durante la generazione del documento:\n{str(e)}"
+            )
 
     def show_settings(self):
         from .settings import SettingsDialog

@@ -113,9 +113,10 @@ def print_document(file_path):
     except Exception as e:
         raise Exception(f"Errore durante la stampa: {str(e)}")
 
-def generate_documents(data, file_path, print_after=False):
-    """Genera il documento Word"""
+def generate_documents(data, output_file, print_after=False):
+    """Genera il documento mandato/reversale"""
     try:
+        # Crea il documento
         doc = Document()
         layout = DocumentLayout(doc)
         
@@ -150,20 +151,16 @@ def generate_documents(data, file_path, print_after=False):
         # Aggiungi piè di pagina
         layout.add_footer(data['Luogo'], data['Data'])
         
+        # Crea la directory se non esiste
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        
         # Salva il documento
-        doc.save(file_path)
+        doc.save(output_file)
         
-        # Stampa se richiesto
-        if print_after:
-            print_document(file_path)
-            
-        # Apri il documento
-        os.startfile(file_path)
-        
-        return file_path
+        return output_file
         
     except Exception as e:
-        raise Exception(f"Errore durante la generazione del documento: {str(e)}")
+        raise Exception(f"Errore nella generazione del documento: {str(e)}")
 
 def prepare_document_data(gui):
     """Prepara i dati dal form per la generazione del documento"""
