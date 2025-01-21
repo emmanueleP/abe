@@ -1,6 +1,7 @@
 # 🏢 Abe-Gestionale
 
 Dovendo gestire la segreteria di una sede Avis, ho sviluppato questa suite di applicazioni per la gestione delle varie necessità.
+Tutte le info, documentazione e altro è disponibile su [3.6Gen](https://emmanuelep.github.io/3p6gen)
 
 ## 📚 Applicazioni
 
@@ -37,17 +38,20 @@ Ancora in sviluppo
 
 ## 🛠️ Requisiti
 - Windows 10/11
-- Spazio su disco: 100MB
+- Spazio su disco: Almeno 300MB
 - RAM: 2GB
 
-## ⚙️ Installazione
-Dalla pagina release scarica il file Abe_setup.exe e installalo.
+## ⚙️ Changelog
+Vedi i changelog di Abe su [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/abe/changelog/changelog.html)
 
 ##  📥 Download
-Scarica la versione più recente da https://www.github.com/emmanueleP/abe/releases/
+Scarica la versione più recente da [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/download.html) o dalla [pagina release](https://github.com/emmanueleP/abe/releases/latest)
 
 ## 📋 Licenza
 MIT License - Copyright (c) 2025 Emmanuele Pani
 
 # Issue and bugs
 If you find any issue or bug, please report it through the issue page on GitHub.
+
+## 🐢 3.6Gen
+In arrivo funzionalità premium gratuite per Abe attraverso la richiesta di un codice prodotto su [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/pagnucom/richiedi.html)
