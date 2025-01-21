@@ -1,4 +1,4 @@
-from docx.shared import Pt, Cm
+from docx.shared import Pt, Cm, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.oxml import OxmlElement
@@ -6,6 +6,8 @@ from docx.oxml.ns import qn
 from .images_manager import images_manager
 from .settings import manrev_settings
 import os
+from PIL import Image
+import io
 
 class DocumentLayout:
     def __init__(self, document):
@@ -70,52 +72,66 @@ class DocumentLayout:
         run.font.size = Pt(11)
 
     def add_signatures(self, signatures):
-        """Aggiunge le firme con layout migliorato"""
+        """Aggiunge la sezione firme con immagini"""
         # Aggiungi spazio prima delle firme
         self.document.add_paragraph()
         
-        # Crea una tabella invisibile per allineare le firme
-        table = self.document.add_table(rows=len(signatures), cols=1)
-        table.allow_autofit = True
+        # Crea tabella per le firme (3 colonne)
+        table = self.document.add_table(rows=2, cols=3)
+        table.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
-        # Rimuovi i bordi della tabella
-        table.style = 'Table Grid'
+        # Dizionario che mappa i ruoli ai file delle firme
+        signature_files = {
+            'Il Tesoriere': manrev_settings.current_settings.get('firme', {}).get('tesoriere_firma', ''),
+            'Il Presidente': manrev_settings.current_settings.get('firme', {}).get('presidente_firma', ''),
+            "L'Addetto Contabile": manrev_settings.current_settings.get('firme', {}).get('addetto_firma', '')
+        }
+        
+        # Prima riga: Immagini delle firme
+        for idx, (role, name) in enumerate(signatures.items()):
+            cell = table.cell(0, idx)
+            paragraph = cell.paragraphs[0]
+            
+            # Se esiste un'immagine della firma, aggiungila
+            signature_path = signature_files.get(role, '')
+            if signature_path and os.path.exists(signature_path):
+                try:
+                    # Ridimensiona l'immagine
+                    with Image.open(signature_path) as img:
+                        # Converti in RGB se necessario
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        # Ridimensiona mantenendo l'aspect ratio
+                        max_width = 100  # pixel
+                        ratio = max_width / img.width
+                        new_size = (max_width, int(img.height * ratio))
+                        img = img.resize(new_size, Image.Resampling.LANCZOS)
+                        
+                        # Salva in un buffer
+                        img_byte_arr = io.BytesIO()
+                        img.save(img_byte_arr, format='PNG')
+                        img_byte_arr.seek(0)
+                        
+                        # Aggiungi al documento
+                        run = paragraph.add_run()
+                        run.add_picture(img_byte_arr, width=Inches(1))
+                except Exception as e:
+                    print(f"Errore nel caricare la firma {role}: {e}")
+            
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Seconda riga: Nomi
+        for idx, (role, name) in enumerate(signatures.items()):
+            cell = table.cell(1, idx)
+            paragraph = cell.paragraphs[0]
+            paragraph.add_run(f"{role}\n{name}")
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Formattazione tabella
+        table.allow_autofit = True
         for row in table.rows:
             for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    for run in paragraph.runs:
-                        run._element.get_or_add_rPr().xpath('./w:bdr')
-                        
-        # Aggiungi le firme
-        for i, (title, name) in enumerate(signatures.items()):
-            cell = table.cell(i, 0)
-            
-            # Titolo
-            title_para = cell.paragraphs[0]
-            title_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            title_run = title_para.add_run(title)
-            title_run.bold = True
-            title_run.font.size = Pt(11)
-            
-            # Nome
-            name_para = cell.add_paragraph()
-            name_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            name_para.add_run(name).font.size = Pt(11)
-            
-            # Spazio per la firma
-            signature_para = cell.add_paragraph()
-            signature_para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            
-            # Aggiungi immagine firma se presente
-            signature_path = images_manager.get_signature_path(title.lower())
-            if signature_path:
-                signature_para.add_run().add_picture(signature_path, width=Cm(4))
-            else:
-                # Se non c'è firma, aggiungi spazio per la firma manuale
-                signature_para.add_run("_" * 40)
-            
-            # Aggiungi spazio dopo ogni firma
-            cell.add_paragraph().add_run().add_break()
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
         
         # Aggiungi spazio dopo la tabella
         self.document.add_paragraph()
