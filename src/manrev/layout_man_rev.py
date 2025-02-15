@@ -38,7 +38,7 @@ class DocumentLayout:
         # Titolo e numero
         header = self.document.add_paragraph()
         header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title_run = header.add_run(f"{title} N. {number}/{year}")
+        title_run = header.add_run(f"{title} N. {number}/{str(manrev_settings.current_settings.get('year'))}")
         title_run.bold = True
         title_run.font.size = Pt(14)
 

@@ -11,6 +11,7 @@ from .event_dialog import EventDialog
 from PyQt5.QtGui import QTextCharFormat, QColor, QIcon
 from .settings import SettingsDialog, agenda_settings
 from ..utils import get_asset_path
+from ..notifications import notification_manager
 
 class AgendaGUI(QMainWindow):
     closed = pyqtSignal()
@@ -88,11 +89,10 @@ class AgendaGUI(QMainWindow):
             notify_before = timedelta(minutes=event[8])  # notify_minutes
             
             if current_time + notify_before >= event_datetime:
-                self.toaster.show_toast(
+                notification_manager.notify(
                     "Promemoria Evento",
                     f"{event[2]}\n{event[3]}",
-                    duration=10,
-                    threaded=True
+                    duration=10
                 )
     
     def show_about(self):

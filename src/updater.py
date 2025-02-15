@@ -6,10 +6,12 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QCheckBox, QMessageBox, QProgressBar
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from .notifications import notification_manager
+import webbrowser
 
 class UpdateChecker(QThread):
     update_available = pyqtSignal(str, str)  # version, release_notes
-    error_occurred = pyqtSignal(str)
+    error_occurred = pyqtSignal(str)  # error message
 
     def __init__(self, current_version):
         super().__init__()
@@ -32,6 +34,15 @@ class UpdateChecker(QThread):
             latest_version = latest_release['tag_name'].lstrip('v')
             
             if self._compare_versions(latest_version, self.current_version) > 0:
+                def open_release():
+                    webbrowser.open(latest_release['html_url'])
+                
+                notification_manager.notify(
+                    "Aggiornamento disponibile",
+                    f"È disponibile la versione {latest_version} di Abe-Gestionale",
+                    duration=10,
+                    callback=open_release
+                )
                 self.update_available.emit(
                     latest_version,
                     latest_release['body']

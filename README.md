@@ -24,7 +24,7 @@ Tutte le info, documentazione e altro è disponibile su [3.6Gen](https://emmanue
 ### 💰 ManRev
 - Gestione Mandati e Reversali
 - Numerazione automatica
-- Stampa documenti
+- Stampa documenti cross-platform
 - Firme digitali
 
 ### 📊 CBP
@@ -36,16 +36,33 @@ Ancora in sviluppo
 - Calendario interattivo
 - Categorie personalizzabili
 
-## 🛠️ Requisiti
+## 🛠️ Requisiti di Sistema
+
+### Windows
 - Windows 10/11
 - Spazio su disco: Almeno 300MB
 - RAM: 2GB
 
+### macOS
+- macOS 10.12 o superiore
+- Spazio su disco: Almeno 300MB
+- RAM: 2GB
+
+## ⚙️ Installazione
+
+### Windows
+1. Scarica l'ultima versione dell'installer da [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/download.html)
+2. Esegui il file .exe di installazione
+3. Segui le istruzioni a schermo
+
+### macOS
+1. Scarica l'ultima versione del .dmg da [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/download.html)
+2. Apri il file .dmg
+3. Trascina l'app nella cartella Applicazioni
+4. Al primo avvio, clicca col tasto destro e seleziona "Apri"
+
 ## ⚙️ Changelog
 Vedi i changelog di Abe su [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/abe/changelog/changelog.html)
-
-##  📥 Download
-Scarica la versione più recente da [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/download.html) o dalla [pagina release](https://github.com/emmanueleP/abe/releases/latest)
 
 ## 📋 Licenza
 MIT License - Copyright (c) 2025 Emmanuele Pani
@@ -53,5 +70,3 @@ MIT License - Copyright (c) 2025 Emmanuele Pani
 # Issue and bugs
 If you find any issue or bug, please report it through the issue page on GitHub.
 
-## 🐢 3.6Gen
-In arrivo funzionalità premium gratuite per Abe attraverso la richiesta di un codice prodotto su [3.6Gen](https://emmanuelep.github.io/3p6gen/pages/pagnucom/richiedi.html)

@@ -4,10 +4,12 @@ import shutil
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QPushButton, QLabel, QGroupBox,
     QHBoxLayout, QLineEdit, QFileDialog, QMessageBox,
-    QTabWidget, QListWidget, QListWidgetItem, QWidget
+    QTabWidget, QListWidget, QListWidgetItem, QWidget, QSpinBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
+from datetime import datetime
+from ..paths import path_manager
 
 class ManRevSettings:
     def __init__(self):
@@ -26,7 +28,13 @@ class ManRevSettings:
         "tesoriere_firma": "",
         "presidente_firma": "",
         "addetto_firma": ""
-            }
+    },
+            "last_mandato": 0,
+            "last_reversale": 0,
+            "year": datetime.now().year,
+            "firma_presidente": "",
+            "firma_tesoriere": "",
+            "firma_segretario": ""
         }
         self.current_settings = self.load_settings()
 
@@ -34,8 +42,12 @@ class ManRevSettings:
         try:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, 'r') as f:
-                    return {**self.default_settings, **json.load(f)}
-            return self.default_settings.copy()
+                    saved_settings = json.load(f)
+                    # Aggiorna solo le chiavi esistenti
+                    for key in self.default_settings:
+                        if key in saved_settings:
+                            self.current_settings[key] = saved_settings[key]
+            return self.current_settings.copy()
         except Exception:
             return self.default_settings.copy()
 
@@ -67,6 +79,16 @@ class SettingsDialog(QDialog):
         # Valori predefiniti
         defaults_group = QGroupBox("Valori Predefiniti")
         defaults_layout = QVBoxLayout()
+        
+        # Anno
+        year_layout = QHBoxLayout()
+        year_label = QLabel("Anno:")
+        self.year_spin = QSpinBox()
+        self.year_spin.setRange(2000, 2100)
+        self.year_spin.setValue(manrev_settings.current_settings["year"])
+        year_layout.addWidget(year_label)
+        year_layout.addWidget(self.year_spin)
+        defaults_layout.addLayout(year_layout)
         
         # Luogo
         place_row = QHBoxLayout()
@@ -296,8 +318,8 @@ class SettingsDialog(QDialog):
                     "tesoriere_firma": self.tesoriere_firma_input.text(),
                     "presidente_firma": self.presidente_firma_input.text(),
                     "addetto_firma": self.addetto_firma_input.text()
-                }
-                # sede_image viene gestito separatamente in browse_sede_image
+                },
+                "year": self.year_spin.value()
             })
             
             manrev_settings.save_settings()
